@@ -1,13 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
-import { CircleX, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type {
   GitAccount,
   GitAccountCheck,
   GitAccountProvider,
 } from '@/lib/api/endpoints/gitAccounts';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,22 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import SecretInput from '@/components/common/inputs/SecretInput';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useCheckGitAccount, useConnectGitAccount } from '@/services/gitAccounts.service';
 import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
+import GitAccountFields from './GitAccountFields';
 import GitAccountProfile from './GitAccountProfile';
-import GitHostMark from './GitHostMark';
-
-const HOSTS: GitAccountProvider[] = ['github', 'gitlab', 'gitea', 'forgejo'];
 
 // Connects the user's own account on a repository host. The token is checked first, the
 // way an integration's credential is, and the dialog then shows the account it signs in
@@ -110,61 +97,21 @@ export default function GitAccountConnectDialog({
             <DialogTitle>{t('accountConnectTitle')}</DialogTitle>
             <DialogDescription>{t('accountConnectHint')}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="git-account-host">{t('accountHost')}</Label>
-            <Select
-              value={provider}
-              onValueChange={(value) =>
-                edit(() => {
-                  const next = value as GitAccountProvider;
-                  setProvider(next);
-                  setBaseUrl(GIT_PROVIDER_CONFIG[next].defaultBaseUrl);
-                })
-              }
-            >
-              <SelectTrigger id="git-account-host" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {HOSTS.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    <GitHostMark host={value} className="size-3.5" />
-                    {GIT_PROVIDER_CONFIG[value].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="git-account-url">{t('nativeBaseUrl')}</Label>
-            <Input
-              id="git-account-url"
-              type="url"
-              dir="ltr"
-              value={baseUrl}
-              onChange={(event) => edit(() => setBaseUrl(event.target.value))}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="git-account-token">{t('nativeAccessToken')}</Label>
-            <SecretInput
-              id="git-account-token"
-              value={token}
-              onChange={(value) => edit(() => setToken(value))}
-              hasStored={false}
-              status={status}
-            />
-            <p className="text-xs text-muted-foreground">{t('accountTokenHint')}</p>
-            <div role="status" className="pt-1 empty:hidden">
-              {refusal && (
-                <Alert variant="destructive">
-                  <CircleX />
-                  <AlertDescription>{refusal}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </div>
+          <GitAccountFields
+            provider={provider}
+            baseUrl={baseUrl}
+            token={token}
+            status={status}
+            refusal={refusal}
+            onProviderChange={(next) =>
+              edit(() => {
+                setProvider(next);
+                setBaseUrl(GIT_PROVIDER_CONFIG[next].defaultBaseUrl);
+              })
+            }
+            onBaseUrlChange={(value) => edit(() => setBaseUrl(value))}
+            onTokenChange={(value) => edit(() => setToken(value))}
+          />
           <div
             role="status"
             aria-label={

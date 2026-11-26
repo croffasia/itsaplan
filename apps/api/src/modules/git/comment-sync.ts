@@ -6,6 +6,7 @@ import {
   gitProviderConnection,
   issue,
   issueActivity,
+  issueAttachment,
 } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { rewriteMentions } from '#shared/mentions';
@@ -32,13 +33,45 @@ export const SYNC_MARKER = '<!-- itsaplan -->';
 // host from notifying them.
 const QUIET_AT = '@&#8203;';
 
-export function toRepositoryText(body: string): string {
-  return `${rewriteMentions(body, (handle) => `${QUIET_AT}${handle}`)}\n\n${SYNC_MARKER}`;
+const MEDIA_LINK = /\/media\/attachments\/([0-9a-f-]{36})\/raw/g;
+
+function webOrigin(): string | undefined {
+  return process.env.APP_URL?.split(',')[0]?.trim() || undefined;
 }
 
-// The text of a repository comment as it reads here: the reverse of toRepositoryText.
+// A file here is named by the web app's path, which means nothing on the host: one copied
+// from the host goes back to its address there, any other to its full address here.
+async function toRepositoryText(body: string, issueId: number): Promise<string> {
+  const text = rewriteMentions(body, (handle) => `${QUIET_AT}${handle}`);
+  const ids = [...new Set(Array.from(text.matchAll(MEDIA_LINK), (match) => match[1]!))];
+  const copies =
+    ids.length === 0
+      ? []
+      : await db
+          .select({ publicId: issueAttachment.publicId, sourceUrl: issueAttachment.sourceUrl })
+          .from(issueAttachment)
+          .where(and(eq(issueAttachment.issueId, issueId), inArray(issueAttachment.publicId, ids)));
+  const sourceUrls = new Map(copies.map((copy) => [copy.publicId, copy.sourceUrl]));
+  const origin = webOrigin();
+  const linked = text.replace(
+    MEDIA_LINK,
+    (path, id: string) => sourceUrls.get(id) ?? (origin ? `${origin}${path}` : path),
+  );
+  return `${linked}\n\n${SYNC_MARKER}`;
+}
+
+// The text of a repository comment as it reads here: the reverse of toRepositoryText. The
+// host's addresses of files copied here turn back into the copies in copyRepositoryFiles.
 export function fromRepositoryText(body: string): string {
-  return body.replace(/\s*<!-- itsaplan -->\s*$/, '').replaceAll(QUIET_AT, '@');
+  const trimmed = body.trimEnd();
+  const text = trimmed.endsWith(SYNC_MARKER)
+    ? trimmed.slice(0, -SYNC_MARKER.length).trimEnd()
+    : body;
+  const origin = webOrigin();
+  const unquiet = text.replaceAll(QUIET_AT, '@');
+  return origin
+    ? unquiet.replaceAll(`${origin}/media/attachments/`, '/media/attachments/')
+    : unquiet;
 }
 
 interface PushTarget {
@@ -131,7 +164,7 @@ export async function pushCreatedComment(comment: FeedItemRow): Promise<void> {
       account,
       target.repository,
       target.number,
-      toRepositoryText(comment.body!),
+      await toRepositoryText(comment.body!, comment.issueId),
     );
     await db
       .insert(gitCommentLink)
@@ -152,28 +185,54 @@ async function linkedTarget(comment: FeedItemRow) {
   return account ? { target, externalId, account } : null;
 }
 
-export async function pushEditedComment(comment: FeedItemRow): Promise<void> {
+// The host gets an edit only from the comment's author: a project owner who edits a
+// member's comment must not write there as that member.
+export async function pushEditedComment(comment: FeedItemRow, editorId: string | null) {
+  if (editorId === null || editorId !== comment.actorUserId || !comment.body) return;
   const linked = await linkedTarget(comment);
-  if (!linked || !comment.body) return;
+  if (!linked) return;
   const { target, externalId, account } = linked;
-  await pushing(target, 'edit', () =>
+  await pushing(target, 'edit', async () =>
     updateProviderIssueComment(
       account,
       target.repository,
       target.number,
       externalId,
-      toRepositoryText(comment.body!),
+      await toRepositoryText(comment.body!, comment.issueId),
     ),
   );
 }
 
-export async function pushDeletedComment(comment: FeedItemRow): Promise<void> {
-  const linked = await linkedTarget(comment);
-  if (!linked) return;
-  const { target, externalId, account } = linked;
-  await pushing(target, 'delete', () =>
-    deleteProviderIssueComment(account, target.repository, target.number, externalId),
-  );
+// The delete a comment deleted here sends to the host, read while its row still holds its
+// link. It is sent after the row goes, so the host's webhook for it finds no link and
+// changes nothing here. As with an edit, only the author's own delete reaches the host.
+export async function hostCommentDelete(
+  comment: FeedItemRow,
+  deleterId: string | null,
+): Promise<() => Promise<void>> {
+  const linked =
+    deleterId !== null && deleterId === comment.actorUserId ? await linkedTarget(comment) : null;
+  return async () => {
+    if (!linked) return;
+    const { target, externalId, account } = linked;
+    await pushing(target, 'delete', () =>
+      deleteProviderIssueComment(account, target.repository, target.number, externalId),
+    );
+  };
+}
+
+// Whether the issue is linked to a repository issue, whatever its sync settings.
+export async function isRepositoryIssue(issueId: number): Promise<boolean> {
+  const [row] = await db
+    .select({ issueId: gitIssueLink.issueId })
+    .from(gitIssueLink)
+    .innerJoin(issue, eq(gitIssueLink.issueId, issue.id))
+    .innerJoin(gitManagedRepository, eq(gitIssueLink.repositoryId, gitManagedRepository.id))
+    .where(
+      and(eq(gitIssueLink.issueId, issueId), eq(issue.projectId, gitManagedRepository.projectId)),
+    )
+    .limit(1);
+  return row !== undefined;
 }
 
 export interface RepositoryComment {

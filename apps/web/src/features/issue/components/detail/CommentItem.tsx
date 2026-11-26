@@ -213,7 +213,13 @@ export default function CommentItem({
           }}
           onClose={() => setConfirmingDelete(false)}
         >
-          <p className="text-sm text-muted-foreground">{t('deleteCommentConfirmation')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              composer?.repositoryIssue
+                ? 'deleteSyncedCommentConfirmation'
+                : 'deleteCommentConfirmation',
+            )}
+          </p>
         </ConfirmDialog>
       )}
     </div>

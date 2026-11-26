@@ -269,6 +269,7 @@
     "deleteComment": "刪除留言",
     "deleteCommentTitle": "刪除此留言？",
     "deleteCommentConfirmation": "該留言及其所有回覆將被永久刪除。",
+    "deleteSyncedCommentConfirmation": "該留言將被永久刪除，其回覆會保留。",
     "reactions": "回應",
     "addReaction": "新增回應",
     "reactedBy": "{names} 回應了 {emoji}",

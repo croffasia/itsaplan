@@ -30,14 +30,18 @@ function fakeGithub() {
   const commentWrites: { method: string; id: number; body?: string; token: string }[] = [];
   // The account /user answers for a token; any other token signs in as 'octo'.
   const accounts: Record<string, { id: number; login: string }> = {};
+  // Comments deleted on the fake without a webhook, as GitLab deletes a note.
+  const goneComments = new Set<number>();
   // Attached files by id: a private one downloads only by the signed address the rendered
-  // HTML names, a missing one not at all, and any other one through a redirect.
+  // HTML names, a missing one not at all, and any other one through a redirect. Before the
+  // signed address comes a link the author wrote with the same id, to another server.
   const privateFiles = new Set<string>();
   const missingFiles = new Set<string>();
   const renderedHtml = (origin: string) =>
     [...privateFiles]
       .map(
         (id) =>
+          `<a href="https://elsewhere.example/x?${id}">x</a>` +
           `<a href="${origin}/signed/7-${id}.png?jwt=ok"><img src="${origin}/signed/7-${id}.png?jwt=ok"></a>`,
       )
       .join('');
@@ -122,6 +126,8 @@ function fakeGithub() {
       }
       const written = path.match(/^\/repos\/acme\/site\/issues\/comments\/(\d+)$/);
       if (written && (req.method === 'PATCH' || req.method === 'DELETE')) {
+        if (goneComments.has(Number(written[1])))
+          return Response.json({ message: 'Not Found' }, { status: 404 });
         const body =
           req.method === 'PATCH' ? ((await req.json()) as { body: string }).body : undefined;
         commentWrites.push({ method: req.method, id: Number(written[1]), body, token });
@@ -170,6 +176,7 @@ function fakeGithub() {
     commentReads,
     commentWrites,
     accounts,
+    goneComments,
     privateFiles,
     missingFiles,
     control,
@@ -770,7 +777,35 @@ describe('Repository issue sync', () => {
       expect(await comments(s, issueId)).toEqual([]);
     });
 
-    it('copies edits and deletes of a repository comment only in two-way sync', async () => {
+    it('sends a file as its address on the host, or as its full address here', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+      const hostFile = `${fake.baseUrl}/user-attachments/assets/eeeeeeee-5555-4555-8555-555555555555`;
+      await deliver(
+        s,
+        'issue_comment',
+        commentEvent('created', 70, `![shot](${hostFile})`, ownerGh),
+      );
+      const [copied] = await comments(s, issueId);
+      expect(copied!.body).toMatch(/^!\[shot\]\(\/media\/attachments\/[0-9a-f-]{36}\/raw\)$/);
+      const local = `/media/attachments/${crypto.randomUUID()}/raw`;
+
+      await s.asOwner
+        .comments({ commentId: copied!.id })
+        .patch({ body: `${copied!.body} ![mine](${local})` });
+
+      const sent = `![shot](${hostFile}) ![mine](${process.env.APP_URL}${local})\n\n<!-- itsaplan -->`;
+      expect(fake.commentWrites).toEqual([
+        { method: 'PATCH', id: 70, body: sent, token: 'own-token' },
+      ]);
+      // The edit comes back from the repository with the text sent and changes nothing.
+      expect(
+        await deliver(s, 'issue_comment', commentEvent('edited', 70, sent, ownerGh)),
+      ).toMatchObject({ handled: 'ignored' });
+    });
+
+    it('copies edits of a repository comment only in two-way sync', async () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
       await deliver(s, 'issue_comment', commentEvent('created', 77, 'Typo'));
@@ -778,40 +813,57 @@ describe('Repository issue sync', () => {
       expect(await deliver(s, 'issue_comment', commentEvent('edited', 77, 'Fixed'))).toMatchObject({
         handled: 'comment',
       });
+      await repository(s).patch({ issueSync: 'one_way' });
+      expect(await deliver(s, 'issue_comment', commentEvent('edited', 77, 'Again'))).toMatchObject({
+        handled: 'ignored',
+      });
+
       expect(await comments(s, issueId)).toMatchObject([
         { body: 'Fixed', actorName: 'reviewer', editedAt: expect.any(Date) },
       ]);
-      await repository(s).patch({ issueSync: 'one_way' });
-      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 77, null))).toMatchObject({
-        handled: 'ignored',
-      });
-      await repository(s).patch({ issueSync: 'two_way' });
-      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 77, null))).toMatchObject({
-        handled: 'comment',
-      });
-
-      expect(await comments(s, issueId)).toEqual([]);
       expect(fake.commentWrites).toEqual([]);
     });
 
-    it('keeps the replies here of a comment deleted on the repository', async () => {
+    it('keeps here a comment the repository deletes, with its replies, and stops syncing it', async () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
-      await deliver(s, 'issue_comment', commentEvent('created', 78, 'Question'));
+      await connectAccount(s);
+      await deliver(s, 'issue_comment', commentEvent('created', 78, 'Question', ownerGh));
       const [question] = await comments(s, issueId);
-      const answer = await s.asOwner
-        .issues({ issueId })
-        .comments.post({ body: 'Answer', replyToId: question!.id });
       await s.asOwner
         .issues({ issueId })
-        .comments.post({ body: 'Follow-up', replyToId: answer.data!.id });
+        .comments.post({ body: 'Answer', replyToId: question!.id });
+      fake.commentWrites.length = 0;
 
-      await deliver(s, 'issue_comment', commentEvent('deleted', 78, null));
+      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 78, null))).toMatchObject({
+        handled: 'comment',
+      });
+      await s.asOwner.comments({ commentId: question!.id }).patch({ body: 'Question, edited' });
+      await s.asOwner.comments({ commentId: question!.id }).delete();
 
-      expect(await comments(s, issueId)).toMatchObject([
-        { body: 'Answer', replyToId: null },
-        { body: 'Follow-up', replyToId: answer.data!.id },
-      ]);
+      expect(await comments(s, issueId)).toMatchObject([{ body: 'Answer', replyToId: null }]);
+      // The repository comment is gone, so neither the edit nor the delete goes there.
+      expect(fake.commentWrites).toEqual([]);
+      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 78, null))).toMatchObject({
+        handled: 'ignored',
+      });
+    });
+
+    it('deletes a comment here that the repository deleted without telling', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+      const posted = await s.asOwner.issues({ issueId }).comments.post({ body: 'Gone there' });
+      fake.goneComments.add(5000);
+
+      const deleted = await s.asOwner.comments({ commentId: posted.data!.id }).delete();
+
+      expect(deleted.status).toBeLessThan(300);
+      expect(await comments(s, issueId)).toEqual([]);
+      const connections = await s.asOwner
+        .projects({ projectKey: 'MKT' })
+        .settings.git.connections.get();
+      expect(connections.data![0]!.repositories[0]!.lastError).toBeNull();
     });
 
     it('shows a repository comment as the member who connected its author', async () => {
@@ -848,7 +900,7 @@ describe('Repository issue sync', () => {
       ]);
     });
 
-    it('deletes on the host the replies that go with a deleted comment', async () => {
+    it('keeps the replies of a comment deleted here, here and on the host', async () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
       await connectAccount(s);
@@ -867,9 +919,8 @@ describe('Repository issue sync', () => {
 
       expect(fake.commentWrites.filter((write) => write.method === 'DELETE')).toEqual([
         { method: 'DELETE', id: 5000, body: undefined, token: 'own-token' },
-        { method: 'DELETE', id: 5001, body: undefined, token: 'member-token' },
       ]);
-      expect(await comments(s, issueId)).toEqual([]);
+      expect(await comments(s, issueId)).toMatchObject([{ body: 'Answer', replyToId: null }]);
     });
 
     it('keeps on the host the comment of a member that the owner edits or deletes here', async () => {

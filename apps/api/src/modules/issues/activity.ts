@@ -26,8 +26,9 @@ import {
 import { listStatusTimeline } from './status-history';
 import { listReactions, type CommentReactionRow } from './reactions';
 import {
+  hostCommentDelete,
+  isRepositoryIssue,
   pushCreatedComment,
-  pushDeletedComment,
   pushEditedComment,
   repositoryComments,
   type RepositoryComment,
@@ -465,9 +466,7 @@ export async function updateComment(
   await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actor);
   await emitCommentEvent(projectId, 'comment.updated', comment, actorUserId);
   if (isOutsideAuthor(actor)) return comment;
-  // The host gets the change only from the comment's author: a project owner who edits
-  // a member's comment must not write there as that member.
-  if (actorUserId !== null && actorUserId === comment.actorUserId) await pushEditedComment(comment);
+  await pushEditedComment(comment, actorUserId);
 
   const added = addedMentionHandles(before.body ?? '', body);
   if (added.length > 0) {
@@ -486,9 +485,11 @@ export async function updateComment(
   return comment;
 }
 
-// Deletes a comment; its replies cascade away with it (reply_to_id FK). The change
-// log keeps a comment_deleted entry, and subscribed webhooks receive the comment as
-// it read. Returns false when there is no such comment.
+// Deletes a comment; its replies cascade away with it (reply_to_id FK). On an issue
+// linked to a repository issue they stay, one level up: the repository issue has no
+// threads, so deleting there or here takes no other comment with it. The change log
+// keeps a comment_deleted entry, and subscribed webhooks receive the comment as it read.
+// Returns false when there is no such comment.
 export async function deleteComment(
   commentId: number,
   actor: ActivityActor,
@@ -502,16 +503,16 @@ export async function deleteComment(
   // Read first: the reactions are deleted with the comment.
   const [comment] = await withCommentDetails([mapFeedItem(before)]);
   const actorUserId = actorId(actor);
-  // Before the rows go: their links to the repository comments go with them. As with an
-  // edit, only the author's own delete reaches the host. The replies go with the comment
-  // here, so their copies go there too, each through its own author's account.
-  if (actorUserId !== null && actorUserId === comment.actorUserId) {
-    for (const entry of [comment, ...(await listReplies([commentId]))])
-      await pushDeletedComment(entry);
-  }
+  if (await isRepositoryIssue(comment.issueId))
+    await db
+      .update(issueActivity)
+      .set({ replyToId: comment.replyToId })
+      .where(eq(issueActivity.replyToId, commentId));
+  const sendHostDelete = await hostCommentDelete(comment, actorUserId);
   await db.delete(issueActivity).where(eq(issueActivity.id, commentId));
   await recordActivity(comment.issueId, [{ action: 'comment_deleted' }], actor);
   await emitCommentEvent(projectId, 'comment.deleted', comment, actorUserId);
+  await sendHostDelete();
   return true;
 }
 

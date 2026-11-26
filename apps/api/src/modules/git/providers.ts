@@ -119,7 +119,6 @@ export interface IssueCommentEvent {
   action: 'created' | 'edited' | 'deleted';
   repo: string;
   number: number;
-  // The comment's id on the host.
   id: string;
   // Empty on a deleted comment.
   body: string;

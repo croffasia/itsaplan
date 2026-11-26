@@ -18,12 +18,7 @@ import {
   type IssuePatch,
   type IssueRow,
 } from '#modules/issues/service';
-import {
-  createComment,
-  deleteComment,
-  updateComment,
-  type ActivityActor,
-} from '#modules/issues/activity';
+import { createComment, updateComment, type ActivityActor } from '#modules/issues/activity';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import {
   listProviderIssueComments,
@@ -64,7 +59,6 @@ interface SyncedRepository {
   issueSync: IssueSyncMode;
   issueColumnId: number | null;
   issueComments: boolean;
-  // The host's address, which names a member's account there.
   baseUrl: string;
 }
 
@@ -401,13 +395,26 @@ export async function handleIssueComment(
     if (!link) return 'ignored';
     return (await copyComment(repository, link.issueId, event, origin)) ? 'comment' : 'ignored';
   }
+  if (event.action === 'deleted') {
+    // The copy here stays, as a comment of this issue only: an edit of it has nowhere to go.
+    const unlinked = await db
+      .delete(gitCommentLink)
+      .where(
+        and(
+          eq(gitCommentLink.repositoryId, repository.id),
+          eq(gitCommentLink.externalId, event.id),
+        ),
+      )
+      .returning({ activityId: gitCommentLink.activityId });
+    return unlinked.length > 0 ? 'comment' : 'ignored';
+  }
   if (repository.issueSync !== 'two_way') return 'ignored';
   return (await applyCommentChange(repository, event, origin)) ? 'comment' : 'ignored';
 }
 
-// An edit or a delete of a repository comment that has a copy here. The change comes
-// from the repository, so it is not sent back there. An edit that matches the copy is
-// the echo of one made here.
+// An edit of a repository comment that has a copy here. The change comes from the
+// repository, so it is not sent back there. An edit that matches the copy is the echo of
+// one made here.
 async function applyCommentChange(
   repository: SyncedRepository,
   event: IssueCommentEvent,
@@ -418,7 +425,6 @@ async function applyCommentChange(
       activityId: gitCommentLink.activityId,
       issueId: issue.id,
       body: issueActivity.body,
-      replyToId: issueActivity.replyToId,
     })
     .from(gitCommentLink)
     .innerJoin(issueActivity, eq(gitCommentLink.activityId, issueActivity.id))
@@ -433,15 +439,6 @@ async function applyCommentChange(
     .limit(1);
   if (!link) return false;
   const actor: ActivityActor = hostActor(origin.sender, origin);
-  if (event.action === 'deleted') {
-    // A repository issue has no threads, so a comment deleted there takes no other with
-    // it. Its replies here stay, one level up.
-    await db
-      .update(issueActivity)
-      .set({ replyToId: link.replyToId })
-      .where(eq(issueActivity.replyToId, link.activityId));
-    return deleteComment(link.activityId, actor, repository.projectId);
-  }
   const body = await copyRepositoryFiles(fromRepositoryText(event.body), {
     repositoryId: repository.id,
     projectId: repository.projectId,

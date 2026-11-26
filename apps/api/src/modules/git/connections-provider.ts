@@ -1219,6 +1219,19 @@ export interface ProviderFileRequest {
 
 const FILE_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
+// A GitLab upload's name as one path segment. The URL parser reads `\` as `/` and resolves
+// `..` and `%2e%2e`, so a name left as written could send the token to another API route.
+function uploadName(written: string): string | null {
+  let name: string;
+  try {
+    name = decodeURIComponent(written);
+  } catch {
+    return null;
+  }
+  if (name === '.' || name === '..' || /[\\/]/.test(name)) return null;
+  return encodeURIComponent(name);
+}
+
 function onHost(url: string, baseUrl: string): boolean {
   return url.startsWith('/') ? !url.startsWith('//') : url.startsWith(`${baseUrl}/`);
 }
@@ -1241,7 +1254,9 @@ export function providerFileRequests(
   if (input.provider === 'gitlab') {
     const upload = url.match(/\/uploads\/([0-9a-f]{32})\/([^?#\s/]+)$/);
     if (!upload || !onHost(url, input.baseUrl)) return null;
-    const [, secret, filename] = upload;
+    const [, secret, written] = upload;
+    const filename = uploadName(written!);
+    if (!filename) return null;
     return [
       {
         url: `${apiBase(input.provider, input.baseUrl)}/projects/${encodeURIComponent(repository.externalId)}/uploads/${secret}/${filename}`,
@@ -1264,6 +1279,10 @@ export function providerFileRequests(
   return null;
 }
 
+// The storage GitHub signs file addresses on. Another link in the rendered text that
+// carries a file's id is one the author wrote, to any server.
+const SIGNED_FILE_ORIGIN = 'https://private-user-images.githubusercontent.com';
+
 // GitHub renders an issue or a comment with signed addresses of its files, valid for a
 // few minutes and readable without a token. The markdown names a file by an address a
 // token cannot read on a private repository. Keyed by the file's id.
@@ -1283,8 +1302,10 @@ export async function providerSignedFiles(
     accept: 'application/vnd.github.full+json',
   });
   const html = text(record(await response.json())?.body_html) ?? '';
+  const trusted = [SIGNED_FILE_ORIGIN, new URL(input.baseUrl).origin];
   for (const match of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {
     const address = match[1]!.replaceAll('&amp;', '&');
+    if (!URL.canParse(address) || !trusted.includes(new URL(address).origin)) continue;
     const id = address.match(FILE_UUID)?.[0]?.toLowerCase();
     if (id && !address.includes('/user-attachments/') && !signed.has(id)) signed.set(id, address);
   }

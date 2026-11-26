@@ -199,6 +199,22 @@ describe('files attached on the host', () => {
     ).toBeNull();
   });
 
+  it('keeps a GitLab upload name to one path segment, so the token reaches no other route', () => {
+    const input = { provider: 'gitlab' as const, baseUrl: 'https://gitlab.example', token: 't' };
+    const repository = repo('https://gitlab.example/acme/site');
+    const secret = '66dbcd21ec5d24ed6ea225176098d52b';
+    const upload = (name: string) =>
+      providerFileRequests(input, repository, `/uploads/${secret}/${name}`);
+    expect(upload('..')).toBeNull();
+    expect(upload('%2e%2e')).toBeNull();
+    expect(upload('..%5C..%5Cvariables')).toBeNull();
+    expect(upload('..\\..\\variables')).toBeNull();
+    expect(upload('%E0%A4%A')).toBeNull();
+    expect(upload('a%3Fb.png')![0]!.url).toBe(
+      `https://gitlab.example/api/v4/projects/42/uploads/${secret}/a%3Fb.png`,
+    );
+  });
+
   it('reads a Gitea attachment with the token, by path or by address on the host', () => {
     const input = { provider: 'gitea' as const, baseUrl: 'https://gitea.example', token: 't' };
     const repository = repo('https://gitea.example/acme/site');

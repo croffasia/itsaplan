@@ -46,8 +46,12 @@ const IMG = /<img\b[^>]*>/gi;
 const SRC = /\bsrc\s*=\s*(["'])(.*?)\1/i;
 const ALT = /\balt\s*=\s*(["'])(.*?)\1/i;
 
+// timeoutMs ends a download that goes quiet; the deadline ends one a server sends slowly.
 const DOWNLOAD_TIMEOUT_MS = 30_000;
+const DOWNLOAD_DEADLINE_MS = 120_000;
 const MAX_REDIRECTS = 3;
+// Files past this many in one text keep their links.
+const MAX_FILES_PER_TEXT = 20;
 
 // The address a text embeds an attachment by: the web app's media route, which the
 // editor and the import write too.
@@ -104,8 +108,14 @@ interface Downloaded {
 async function download(request: ProviderFileRequest, maxBytes: number): Promise<Downloaded> {
   let url = request.url;
   let headers = request.headers;
+  const signal = AbortSignal.timeout(DOWNLOAD_DEADLINE_MS);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const response = await pinnedFetch(url, { headers, timeoutMs: DOWNLOAD_TIMEOUT_MS, maxBytes });
+    const response = await pinnedFetch(url, {
+      headers,
+      timeoutMs: DOWNLOAD_TIMEOUT_MS,
+      maxBytes,
+      signal,
+    });
     const location = response.headers.get('location');
     if (response.status >= 300 && response.status < 400 && location) {
       const next = new URL(location, url);
@@ -208,9 +218,9 @@ export async function copyRepositoryFiles(text: string, source: FileSource): Pro
   if (files.size === 0) return text;
   const call = await repositoryCall(source.repositoryId);
   if (!call) return text;
-  const hosted = [...files].filter(([url]) =>
-    providerFileRequests(call.input, call.repository, url),
-  );
+  const hosted = [...files]
+    .filter(([url]) => providerFileRequests(call.input, call.repository, url))
+    .slice(0, MAX_FILES_PER_TEXT);
   if (hosted.length === 0) return text;
 
   // Read once, and only when a file is not copied yet.

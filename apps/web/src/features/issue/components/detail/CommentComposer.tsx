@@ -71,7 +71,7 @@ export default function CommentComposer({
   const candidates = useMentionCandidates({ projectKey, on: 'issue', place: 'comment' });
   const mention = useMentionMenu(body, setBody, candidates);
   const notice = useUnsentCommentNotice(repositoryIssue);
-  // Held while the notice is open: "Don't show" or a new account clears `notice.host`,
+  // Held while the notice is open: "Don't show again" or a new account clears `notice.host`,
   // and the connect dialog inside the notice must stay open through both.
   const [noticeHost, setNoticeHost] = useState<typeof notice.host>(null);
 

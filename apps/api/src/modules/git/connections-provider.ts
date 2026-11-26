@@ -184,10 +184,11 @@ export function providerErrorMessage(
 async function providerRequest(
   input: ProviderConnectionInput,
   path: string,
-  init: RequestInit & { allowMissing?: boolean } = {},
+  init: RequestInit & { allowMissing?: boolean; accept?: string } = {},
 ): Promise<Response> {
   const headers = providerHeaders(input.provider, input.token);
   if (init.body !== undefined) headers.set('content-type', 'application/json');
+  if (init.accept) headers.set('accept', init.accept);
   let response: Response;
   try {
     response = await pinnedFetch(`${apiBase(input.provider, input.baseUrl)}${path}`, {
@@ -1196,4 +1197,87 @@ export async function setProviderIssueState(
         : { state },
     ),
   });
+}
+
+export interface ProviderFileRequest {
+  url: string;
+  headers?: Record<string, string>;
+}
+
+const FILE_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+function onHost(url: string, baseUrl: string): boolean {
+  return url.startsWith('/') ? !url.startsWith('//') : url.startsWith(`${baseUrl}/`);
+}
+
+// How to download a file an issue or a comment on the host embeds by `url`, in the order
+// to try; null when the url is not a file attached on this host. GitLab and Gitea write
+// it as a path on the host.
+export function providerFileRequests(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  url: string,
+): ProviderFileRequest[] | null {
+  if (input.provider === 'github') {
+    const attached =
+      url.startsWith(`${input.baseUrl}/user-attachments/`) ||
+      url.startsWith(`${repository.webUrl}/assets/`) ||
+      url.startsWith('https://user-images.githubusercontent.com/');
+    return attached ? [{ url }] : null;
+  }
+  if (input.provider === 'gitlab') {
+    const upload = url.match(/\/uploads\/([0-9a-f]{32})\/([^?#\s/]+)$/);
+    if (!upload || !onHost(url, input.baseUrl)) return null;
+    const [, secret, filename] = upload;
+    return [
+      {
+        url: `${apiBase(input.provider, input.baseUrl)}/projects/${encodeURIComponent(repository.externalId)}/uploads/${secret}/${filename}`,
+        headers: { 'private-token': input.token },
+      },
+      // GitLab before 17.4 has no download route; a public project serves the file to anyone.
+      { url: `${repository.webUrl}/uploads/${secret}/${filename}` },
+    ];
+  }
+  if (input.provider === 'gitea' || input.provider === 'forgejo') {
+    const attachment = url.match(/\/attachments\/([0-9a-f-]{36})$/i);
+    if (!attachment || !onHost(url, input.baseUrl)) return null;
+    return [
+      {
+        url: `${input.baseUrl}/attachments/${attachment[1]}`,
+        headers: { authorization: `token ${input.token}` },
+      },
+    ];
+  }
+  return null;
+}
+
+// GitHub renders an issue or a comment with signed addresses of its files, valid for a
+// few minutes and readable without a token. The markdown names a file by an address a
+// token cannot read on a private repository. Keyed by the file's id.
+export async function providerSignedFiles(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  where: { number: number } | { commentId: string },
+): Promise<Map<string, string>> {
+  const signed = new Map<string, string>();
+  if (input.provider !== 'github') return signed;
+  const repoPath = githubRepoPath(repository.fullName);
+  const path =
+    'number' in where
+      ? `${repoPath}/issues/${where.number}`
+      : `${repoPath}/issues/comments/${encodeURIComponent(where.commentId)}`;
+  const response = await providerRequest(input, path, {
+    accept: 'application/vnd.github.full+json',
+  });
+  const html = text(record(await response.json())?.body_html) ?? '';
+  for (const match of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {
+    const address = match[1]!.replaceAll('&amp;', '&');
+    const id = address.match(FILE_UUID)?.[0]?.toLowerCase();
+    if (id && !address.includes('/user-attachments/') && !signed.has(id)) signed.set(id, address);
+  }
+  return signed;
+}
+
+export function providerFileId(url: string): string | null {
+  return url.match(FILE_UUID)?.[0]?.toLowerCase() ?? null;
 }

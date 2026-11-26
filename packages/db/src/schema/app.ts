@@ -2090,6 +2090,9 @@ export const issueAttachment = pgTable(
     filename: text('filename').notNull(),
     contentType: text('content_type').notNull(),
     sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    // The address of the file this one was copied from, such as an image of a synced
+    // repository issue. The same text synced again reuses the copy.
+    sourceUrl: text('source_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('issue_attachment_issue_idx').on(t.issueId)],

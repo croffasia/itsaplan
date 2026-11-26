@@ -7,6 +7,7 @@ import {
   gitlabPullRequest,
   gitlabRepository,
   providerErrorMessage,
+  providerFileRequests,
 } from '../../connections-provider';
 
 describe('Git provider repository responses', () => {
@@ -170,5 +171,52 @@ describe('Git provider errors', () => {
     expect(providerErrorMessage('github', 403, 'API rate limit exceeded', '0')).toContain(
       'rate limit reached',
     );
+  });
+});
+
+describe('files attached on the host', () => {
+  const id = '0f8e2c4a-1b2c-4d5e-8f90-123456789abc';
+  const repo = (webUrl: string) => ({
+    externalId: '42',
+    fullName: 'acme/site',
+    webUrl,
+    private: true,
+  });
+
+  it('reads a GitLab upload through the API, then from the page of a public project', () => {
+    const input = { provider: 'gitlab' as const, baseUrl: 'https://gitlab.example', token: 't' };
+    const repository = repo('https://gitlab.example/acme/site');
+    const secret = '66dbcd21ec5d24ed6ea225176098d52b';
+    expect(providerFileRequests(input, repository, `/uploads/${secret}/shot.png`)).toEqual([
+      {
+        url: `https://gitlab.example/api/v4/projects/42/uploads/${secret}/shot.png`,
+        headers: { 'private-token': 't' },
+      },
+      { url: `https://gitlab.example/acme/site/uploads/${secret}/shot.png` },
+    ]);
+    expect(
+      providerFileRequests(input, repository, `https://elsewhere.example/uploads/${secret}/x.png`),
+    ).toBeNull();
+  });
+
+  it('reads a Gitea attachment with the token, by path or by address on the host', () => {
+    const input = { provider: 'gitea' as const, baseUrl: 'https://gitea.example', token: 't' };
+    const repository = repo('https://gitea.example/acme/site');
+    const expected = [
+      { url: `https://gitea.example/attachments/${id}`, headers: { authorization: 'token t' } },
+    ];
+    expect(providerFileRequests(input, repository, `/attachments/${id}`)).toEqual(expected);
+    expect(
+      providerFileRequests(input, repository, `https://gitea.example/acme/site/attachments/${id}`),
+    ).toEqual(expected);
+    expect(providerFileRequests(input, repository, `//evil.example/attachments/${id}`)).toBeNull();
+  });
+
+  it('takes only GitHub attachments, not other images', () => {
+    const input = { provider: 'github' as const, baseUrl: 'https://github.com', token: 't' };
+    const repository = repo('https://github.com/acme/site');
+    const asset = `https://github.com/user-attachments/assets/${id}`;
+    expect(providerFileRequests(input, repository, asset)).toEqual([{ url: asset }]);
+    expect(providerFileRequests(input, repository, 'https://example.com/x.png')).toBeNull();
   });
 });

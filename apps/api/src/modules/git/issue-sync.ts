@@ -35,6 +35,7 @@ import {
 import { providerCallArgs, providerCallColumns } from './connections-service';
 import { memberForAccount } from './accounts';
 import { SYNC_MARKER, fromRepositoryText } from './comment-sync';
+import { copyRepositoryFiles } from './attachment-sync';
 import {
   PROVIDER_LABEL,
   hostActor,
@@ -208,9 +209,15 @@ async function copyComment(
     ? await memberForAccount(repository.projectId, repository.baseUrl, comment.author)
     : null;
   const author = hostActor(comment.author, origin);
+  const body = await copyRepositoryFiles(fromRepositoryText(comment.body), {
+    repositoryId: repository.id,
+    projectId: repository.projectId,
+    issueId,
+    where: { commentId: comment.id },
+  });
   const created = await createComment({
     issueId,
-    body: fromRepositoryText(comment.body),
+    body,
     actorUserId: memberId,
     ...(memberId ? {} : { authorName: author.system }),
     authorSource: author.source,
@@ -258,6 +265,16 @@ async function createLinkedIssue(
     await db.delete(gitIssueLink).where(eq(gitIssueLink.id, claimId));
     throw error;
   }
+  // The files belong to the issue, so they are copied once it exists. The text is the
+  // repository's, so the change is part of creating the issue and logs nothing.
+  const description = await copyRepositoryFiles(snapshot.body, {
+    repositoryId: repository.id,
+    projectId: repository.projectId,
+    issueId,
+    where: { number: snapshot.number },
+  });
+  if (description !== snapshot.body)
+    await db.update(issue).set({ description }).where(eq(issue.id, issueId));
   for (const comment of comments) await copyComment(repository, issueId, comment, origin);
   return true;
 }
@@ -335,7 +352,15 @@ async function applyIssueChange(
   const patch: IssuePatch = {};
   if (changed.has('title') && event.title && event.title !== current.title)
     patch.title = event.title;
-  if (changed.has('body') && event.body !== current.description) patch.description = event.body;
+  if (changed.has('body')) {
+    const body = await copyRepositoryFiles(event.body, {
+      repositoryId: repository.id,
+      projectId: repository.projectId,
+      issueId: current.id,
+      where: { number: event.number },
+    });
+    if (body !== current.description) patch.description = body;
+  }
   if (changed.has('state')) {
     const columnId = await stateTargetColumnId(repository, current.columnId, event);
     if (columnId != null) patch.columnId = columnId;
@@ -417,7 +442,12 @@ async function applyCommentChange(
       .where(eq(issueActivity.replyToId, link.activityId));
     return deleteComment(link.activityId, actor, repository.projectId);
   }
-  const body = fromRepositoryText(event.body);
+  const body = await copyRepositoryFiles(fromRepositoryText(event.body), {
+    repositoryId: repository.id,
+    projectId: repository.projectId,
+    issueId: link.issueId,
+    where: { commentId: event.id },
+  });
   if (!body || body === link.body) return false;
   await updateComment(link.activityId, body, actor, repository.projectId);
   return true;

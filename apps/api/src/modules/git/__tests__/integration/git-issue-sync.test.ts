@@ -30,6 +30,17 @@ function fakeGithub() {
   const commentWrites: { method: string; id: number; body?: string; token: string }[] = [];
   // The login /user answers for a token; any other token signs in as 'octo'.
   const logins: Record<string, string> = {};
+  // Attached files by id: a private one downloads only by the signed address the rendered
+  // HTML names, a missing one not at all, and any other one through a redirect.
+  const privateFiles = new Set<string>();
+  const missingFiles = new Set<string>();
+  const renderedHtml = (origin: string) =>
+    [...privateFiles]
+      .map(
+        (id) =>
+          `<a href="${origin}/signed/7-${id}.png?jwt=ok"><img src="${origin}/signed/7-${id}.png?jwt=ok"></a>`,
+      )
+      .join('');
   // labelPages: 'endless' names a next page of new labels forever; 'stuck' names page 1 again.
   const control = {
     refuseIssueWrites: false,
@@ -44,6 +55,21 @@ function fakeGithub() {
       const path = url.pathname.replace(/^\/api\/v3/, '');
       const token = req.headers.get('authorization')?.replace(/^Bearer /, '') ?? '';
       if (path === '/user') return Response.json({ login: logins[token] ?? 'octo' });
+      const asset = path.match(/^\/user-attachments\/assets\/([0-9a-f-]+)$/);
+      if (asset) {
+        const id = asset[1]!;
+        if (privateFiles.has(id) || missingFiles.has(id))
+          return new Response(null, { status: 404 });
+        return new Response(null, { status: 302, headers: { location: `/storage/${id}.gif` } });
+      }
+      if (path.startsWith('/storage/'))
+        return new Response('GIF89a', { headers: { 'content-type': 'image/gif' } });
+      const signed = path.match(/^\/signed\/7-([0-9a-f-]+)\.png$/);
+      if (signed && url.searchParams.get('jwt') === 'ok' && privateFiles.has(signed[1]!))
+        return new Response('PNG', { headers: { 'content-type': 'image/png' } });
+      const rendered = path.match(/^\/repos\/acme\/site\/issues\/(?:comments\/)?(\d+)$/);
+      if (rendered && req.method === 'GET')
+        return Response.json({ id: Number(rendered[1]), body_html: renderedHtml(url.origin) });
       if (path === '/repositories/1')
         return Response.json({
           id: 1,
@@ -144,6 +170,8 @@ function fakeGithub() {
     commentReads,
     commentWrites,
     logins,
+    privateFiles,
+    missingFiles,
     control,
     stop: () => server.stop(true),
   };
@@ -862,6 +890,69 @@ describe('Repository issue sync', () => {
         { body: 'Hi', actorUserId: null, actorName: 'outsider-gh', actorSource: 'github' },
       ]);
     });
+  });
+
+  it('copies the files of a repository issue and its comments into attachments', async () => {
+    const s = await setup(fake);
+    await repository(s).patch({ issueSync: 'two_way', issueComments: true });
+    const base = fake.baseUrl;
+    const [shot, chart, gone, reply] = [
+      'aaaaaaaa-1111-4111-8111-111111111111',
+      'bbbbbbbb-2222-4222-8222-222222222222',
+      'cccccccc-3333-4333-8333-333333333333',
+      'dddddddd-4444-4444-8444-444444444444',
+    ];
+    fake.privateFiles.add(shot);
+    fake.privateFiles.add(reply);
+    fake.missingFiles.add(gone);
+    const body = [
+      `![screen shot](${base}/user-attachments/assets/${shot})`,
+      `<img width="300" alt="chart" src="${base}/user-attachments/assets/${chart}" />`,
+      `![lost](${base}/user-attachments/assets/${gone})`,
+      '![elsewhere](https://example.com/x.png)',
+    ].join('\n');
+
+    await deliver(s, 'issues', issueEvent('opened', { ...opened, body }));
+    const [created] = await boardIssues(s.asOwner);
+    const issueApi = s.asOwner.issues({ issueId: created!.id });
+    const files = async () => (await issueApi.attachments.get()).data!;
+    const copied = await files();
+    const urlOf = (name: string) => `/media${copied.find((file) => file.filename === name)!.url}`;
+
+    expect(copied.map((file) => [file.filename, file.contentType]).sort()).toEqual([
+      ['chart.gif', 'image/gif'],
+      ['screen shot.png', 'image/png'],
+    ]);
+    const description = [
+      `![screen shot](${urlOf('screen shot.png')})`,
+      `<img width="300" alt="chart" src="${urlOf('chart.gif')}" />`,
+      `![lost](${base}/user-attachments/assets/${gone})`,
+      '![elsewhere](https://example.com/x.png)',
+    ].join('\n');
+    expect((await issueApi.get()).data!.description).toBe(description);
+
+    // The same text synced again reuses the copies.
+    await deliver(
+      s,
+      'issues',
+      issueEvent('edited', { ...opened, body }, { changes: { body: { from: '' } } }),
+    );
+    expect(await files()).toHaveLength(2);
+    expect((await issueApi.get()).data!.description).toBe(description);
+
+    await deliver(s, 'issue_comment', {
+      action: 'created',
+      issue: githubIssue(opened),
+      comment: {
+        id: 61,
+        body: `Fixed, see ![after](${base}/user-attachments/assets/${reply})`,
+        user: { login: 'reviewer' },
+      },
+      repository: { full_name: 'acme/site' },
+    });
+    const after = (await files()).find((file) => file.filename === 'after.png')!;
+    const feed = await issueApi.feed.get({ query: { filter: 'comments' } });
+    expect(feed.data!.items).toMatchObject([{ body: `Fixed, see ![after](/media${after.url})` }]);
   });
 
   it('refuses an import while the sync is off', async () => {

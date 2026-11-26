@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Accounts",
     "title": "Accounts",
-    "description": "Connect external accounts to sign in with them.",
+    "description": "Accounts you sign in with, and your accounts on repository hosts.",
     "googleDescription": "Sign in with your Google account.",
     "connected": "Connected",
     "setPasswordFirst": "Set a password first",
@@ -87,7 +87,10 @@
     "disconnect": "Disconnect",
     "loadFailed": "Could not load connected accounts.",
     "connectFailed": "Could not connect Google.",
-    "disconnectFailed": "Could not disconnect this account."
+    "disconnectFailed": "Could not disconnect this account.",
+    "repositoryAccount": "Repository account",
+    "repositoryAccountDescription": "Act in repositories on your behalf.",
+    "repositoryAccountDisconnected": "Repository account disconnected"
   },
   "preferences": {
     "label": "Preferences",

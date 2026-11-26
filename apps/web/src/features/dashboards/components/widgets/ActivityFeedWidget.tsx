@@ -7,6 +7,7 @@ import { issuePath } from '@/utils/paths';
 import { EMPTY_FILTER_SET, applyFilters, isActiveFilterSet, type FilterSet } from '@/utils/filters';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
+import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
 import { useActivityFeedQuery } from '../../services/analytics.service';
 
 // The actions that get their own verb phrase, as messages under
@@ -107,7 +108,10 @@ export default function ActivityFeedWidget({
           <li key={a.id} className="flex items-start gap-2 text-sm">
             <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
             <div className="min-w-0 flex-1">
-              <span className="text-foreground/80">{a.actorName ?? t('someone')}</span>{' '}
+              <span className="text-foreground/80">{a.actorName ?? t('someone')}</span>
+              {a.actorSource && (
+                <ActorSourceIcon source={a.actorSource} className="ms-1 inline align-[-1px]" />
+              )}{' '}
               <span className="text-muted-foreground">{verb(a.kind, a.action)}</span>{' '}
               <Link href={issuePath(projectKey, a.issueSequence)} className="hover:underline">
                 {projectKey}-{a.issueSequence}

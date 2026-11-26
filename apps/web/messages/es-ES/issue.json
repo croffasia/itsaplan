@@ -269,9 +269,16 @@
     "deleteComment": "Eliminar comentario",
     "deleteCommentTitle": "¿Eliminar este comentario?",
     "deleteCommentConfirmation": "El comentario y sus respuestas se eliminarán permanentemente.",
+    "deleteSyncedCommentConfirmation": "El comentario se eliminará permanentemente. Sus respuestas se mantienen.",
     "reactions": "Reacciones",
     "addReaction": "Añadir reacción",
-    "reactedBy": "{names} reaccionó con {emoji}"
+    "reactedBy": "{names} reaccionó con {emoji}",
+    "unsentTitle": "Este comentario no llegará a {provider}",
+    "unsentBody": "Los comentarios de esta incidencia van a {provider} con la cuenta de cada autor. No has conectado la tuya, así que este se queda aquí.",
+    "unsentHide": "No volver a mostrar",
+    "unsentPostHere": "Publicar solo aquí",
+    "unsentConnect": "Conectar {provider}",
+    "openOnHost": "Abrir en {provider}"
   },
   "stats": {
     "title": "Estadísticas",

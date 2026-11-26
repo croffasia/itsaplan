@@ -503,7 +503,7 @@
     "issueColumnHint": "تسک‌های واردشده هم به اینجا می‌آیند. در همگام‌سازی دوطرفه، تسک‌های بازگشایی‌شده هم.",
     "issueColumnNone": "ستون اول",
     "issueComments": "کپی دیدگاه‌ها",
-    "issueCommentsHint": "دیدگاه‌های جدید مخزن در تسک روی برد کپی می‌شوند. دیدگاه‌هایی که روی برد نوشته می‌شوند همان‌جا می‌مانند.",
+    "issueCommentsHint": "نظرهای جدید مخزن به مسئلهٔ تخته کپی می‌شوند.",
     "importIssues": "وارد کردن تسک‌های باز",
     "importIssuesHint": "تسک‌هایی که روی برد هستند رد می‌شوند.",
     "importIssuesAction": "وارد کردن",
@@ -522,7 +522,21 @@
     "changeType": "تغییر نوع…",
     "noType": "نوعی وجود ندارد.",
     "noRepositoryLabels": "این مخزن هیچ برچسبی ندارد.",
-    "manualSetupHint": "برای مخزنی که هیچ حساب ارائه‌دهنده‌ای به آن دسترسی ندارد. با این روش تسک‌ها همگام نمی‌شوند."
+    "manualSetupHint": "برای مخزنی که هیچ حساب ارائه‌دهنده‌ای به آن دسترسی ندارد. با این روش تسک‌ها همگام نمی‌شوند.",
+    "issueCommentsPush": "ارسال نظرها به مخزن",
+    "issueCommentsPushHint": "نظرهایی که اینجا نوشته می‌شوند با حساب خود نویسنده در مسئلهٔ مخزن منتشر می‌شوند.",
+    "issueCommentsPushAs": "نظرهای شما با نام {login} ارسال می‌شوند.",
+    "issueCommentsPushNotice": "فقط نظرهای اعضایی ارسال می‌شود که حساب {provider} خود را در نمایه وصل کرده‌اند. نظرهای شما اینجا می‌مانند.",
+    "accountConnectAction": "اتصال حساب {provider}",
+    "accountConnectTitle": "اتصال حساب مخزن شما",
+    "accountConnectHint": "برای انجام کار در مخزن از طرف شما استفاده می‌شود.",
+    "accountHost": "سرویس",
+    "accountTokenHint": "از توکنی استفاده کنید که بتواند روی مسئله‌ها نظر بنویسد. توکن رمزگذاری می‌شود و دیگر نمایش داده نمی‌شود.",
+    "accountCheck": "بررسی توکن",
+    "accountSignsInAs": "این توکن با نام {login} وارد می‌شود.",
+    "accountConnectThis": "اتصال این حساب",
+    "accountCheckFailed": "بررسی توکن ممکن نشد.",
+    "accountConnected": "حساب {provider} وصل شد"
   },
   "importExport": {
     "jiraPreview": {

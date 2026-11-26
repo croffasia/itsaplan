@@ -269,9 +269,16 @@
     "deleteComment": "Delete comment",
     "deleteCommentTitle": "Delete this comment?",
     "deleteCommentConfirmation": "The comment and its replies will be permanently deleted.",
+    "deleteSyncedCommentConfirmation": "The comment will be permanently deleted. Its replies stay.",
     "reactions": "Reactions",
     "addReaction": "Add reaction",
-    "reactedBy": "{names} reacted with {emoji}"
+    "reactedBy": "{names} reacted with {emoji}",
+    "unsentTitle": "This comment won't reach {provider}",
+    "unsentBody": "Comments on this issue go to {provider} under each author's own account. You haven't connected yours, so this one stays here.",
+    "unsentHide": "Don't show again",
+    "unsentPostHere": "Post here only",
+    "unsentConnect": "Connect {provider}",
+    "openOnHost": "Open in {provider}"
   },
   "stats": {
     "title": "Stats",

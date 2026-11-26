@@ -1415,6 +1415,34 @@
       "when": 1795629249662,
       "tag": "0201_document_pin_position",
       "breakpoints": true
+    },
+    {
+      "idx": 202,
+      "version": "7",
+      "when": 1795653161645,
+      "tag": "0202_activity_actor_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 203,
+      "version": "7",
+      "when": 1795655621670,
+      "tag": "0203_git_comment_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 204,
+      "version": "7",
+      "when": 1795657317677,
+      "tag": "0204_attachment_source_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 205,
+      "version": "7",
+      "when": 1795660848077,
+      "tag": "0205_git_account_id",
+      "breakpoints": true
     }
   ]
 }

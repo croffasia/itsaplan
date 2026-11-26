@@ -503,7 +503,7 @@
     "issueColumnHint": "İçe aktarılan işler de buraya gelir. Çift yönlü eşitlemede yeniden açılanlar da.",
     "issueColumnNone": "İlk sütun",
     "issueComments": "Yorumları kopyala",
-    "issueCommentsHint": "Depodaki yeni yorumlar panodaki işe kopyalanır. Panoda yazılan yorumlar orada kalır.",
+    "issueCommentsHint": "Depodaki yeni yorumlar panodaki işe kopyalanır.",
     "importIssues": "Açık işleri içe aktar",
     "importIssuesHint": "Panoda zaten olan işler atlanır.",
     "importIssuesAction": "İçe aktar",
@@ -522,7 +522,21 @@
     "changeType": "Türü değiştir…",
     "noType": "Tür yok.",
     "noRepositoryLabels": "Bu depoda etiket yok.",
-    "manualSetupHint": "Hiçbir sağlayıcı hesabının erişemediği bir depo için. Bu yolla işler eşitlenmez."
+    "manualSetupHint": "Hiçbir sağlayıcı hesabının erişemediği bir depo için. Bu yolla işler eşitlenmez.",
+    "issueCommentsPush": "Yorumları depoya gönder",
+    "issueCommentsPushHint": "Burada yazılan yorumlar, yazarının kendi hesabıyla depodaki işe gönderilir.",
+    "issueCommentsPushAs": "Sizinkiler {login} olarak gönderilir.",
+    "issueCommentsPushNotice": "Yalnızca profilinde {provider} hesabını bağlayan üyelerin yorumları gönderilir. Sizinkiler burada kalır.",
+    "accountConnectAction": "{provider} hesabını bağla",
+    "accountConnectTitle": "Depo hesabınızı bağlayın",
+    "accountConnectHint": "Depoda sizin adınıza işlem yapmak için kullanılır.",
+    "accountHost": "Hizmet",
+    "accountTokenHint": "İşlere yorum yazabilen bir token kullanın. Token şifrelenir ve bir daha gösterilmez.",
+    "accountCheck": "Token’ı denetle",
+    "accountSignsInAs": "Token {login} olarak oturum açar.",
+    "accountConnectThis": "Bu hesabı bağla",
+    "accountCheckFailed": "Token denetlenemedi.",
+    "accountConnected": "{provider} hesabı bağlandı"
   },
   "importExport": {
     "jiraPreview": {

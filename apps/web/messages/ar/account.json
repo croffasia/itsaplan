@@ -77,7 +77,7 @@
   "accounts": {
     "label": "الحسابات",
     "title": "الحسابات",
-    "description": "اربط حسابات خارجية عشان تسجّل دخولك بيها.",
+    "description": "الحسابات التي تسجّل الدخول بها، وحساباتك على خدمات المستودعات.",
     "googleDescription": "سجّل دخولك بحساب Google بتاعك.",
     "connected": "متصل",
     "setPasswordFirst": "عيّن كلمة مرور أولًا",
@@ -87,7 +87,10 @@
     "disconnect": "فصل",
     "loadFailed": "تعذّر تحميل الحسابات المرتبطة.",
     "connectFailed": "تعذّر ربط Google.",
-    "disconnectFailed": "تعذّر فصل هذا الحساب."
+    "disconnectFailed": "تعذّر فصل هذا الحساب.",
+    "repositoryAccount": "حساب المستودع",
+    "repositoryAccountDescription": "يعمل في المستودعات نيابةً عنك.",
+    "repositoryAccountDisconnected": "تم فصل حساب المستودع"
   },
   "preferences": {
     "label": "التفضيلات",

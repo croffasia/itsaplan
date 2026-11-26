@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Аккаунты",
     "title": "Аккаунты",
-    "description": "Подключите внешние аккаунты, чтобы входить через них.",
+    "description": "Аккаунты для входа и ваши аккаунты в сервисах репозиториев.",
     "googleDescription": "Входите через свой аккаунт Google.",
     "connected": "Подключено",
     "setPasswordFirst": "Сначала задайте пароль",
@@ -87,7 +87,10 @@
     "disconnect": "Отключить",
     "loadFailed": "Не удалось загрузить подключённые аккаунты.",
     "connectFailed": "Не удалось подключить Google.",
-    "disconnectFailed": "Не удалось отключить этот аккаунт."
+    "disconnectFailed": "Не удалось отключить этот аккаунт.",
+    "repositoryAccount": "Аккаунт репозитория",
+    "repositoryAccountDescription": "Действия в репозиториях от вашего имени.",
+    "repositoryAccountDisconnected": "Аккаунт репозитория отключён"
   },
   "preferences": {
     "label": "Настройки",

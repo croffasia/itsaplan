@@ -343,5 +343,6 @@
     "redirectUrlHint": "在 Slack 的 OAuth & Permissions → Redirect URLs 中加入它。",
     "workspace": "Slack 工作區",
     "workspaceHint": "應用程式所安裝的 Slack 工作區。只有該工作區的帳號可以連結。"
-  }
+  },
+  "fromHost": "來自 {host}"
 }

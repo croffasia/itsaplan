@@ -63,5 +63,10 @@ export default function ActivityItemList({
 }
 
 function sameChange(a: FeedItem, b: FeedItem): boolean {
-  return a.action === b.action && a.actorUserId === b.actorUserId && a.actorName === b.actorName;
+  return (
+    a.action === b.action &&
+    a.actorUserId === b.actorUserId &&
+    a.actorName === b.actorName &&
+    a.actorSource === b.actorSource
+  );
 }

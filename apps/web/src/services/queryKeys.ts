@@ -347,6 +347,7 @@ export const qk = {
   connectedApps: ['connectedApps'] as const,
   // The auth providers better-auth reports for the signed-in user (accounts page).
   linkedAccounts: ['linkedAccounts'] as const,
+  gitAccounts: ['gitAccounts'] as const,
   // The signed-in user's notification preferences in every project, and the accounts the
   // notifications go to: Telegram, and one per Slack workspace (notifications page).
   notificationPreferences: ['notificationPreferences'] as const,

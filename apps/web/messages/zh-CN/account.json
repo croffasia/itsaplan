@@ -77,7 +77,7 @@
   "accounts": {
     "label": "关联账户",
     "title": "关联账户",
-    "description": "关联外部账户，用于登录。",
+    "description": "用于登录的账号，以及你在仓库服务上的账号。",
     "googleDescription": "使用 Google 账户登录。",
     "connected": "已连接",
     "setPasswordFirst": "请先设置密码",
@@ -87,7 +87,10 @@
     "disconnect": "断开连接",
     "loadFailed": "无法加载关联账户。",
     "connectFailed": "无法连接 Google。",
-    "disconnectFailed": "无法断开此账户。"
+    "disconnectFailed": "无法断开此账户。",
+    "repositoryAccount": "仓库账号",
+    "repositoryAccountDescription": "以你的身份在仓库中操作。",
+    "repositoryAccountDisconnected": "已断开仓库账号"
   },
   "preferences": {
     "label": "偏好设置",

@@ -341,6 +341,9 @@ export const userPreference = pgTable(
     onboardingSeen: boolean('onboarding_seen').notNull().default(false),
     // Whether the instance owner closed the request to list the company on itsaplan.dev.
     showcaseSeen: boolean('showcase_seen').notNull().default(false),
+    // Whether the user turned off the notice that a comment on a synced issue stays
+    // here because they have no account connected on the repository host.
+    unsentCommentNoticeHidden: boolean('unsent_comment_notice_hidden').notNull().default(false),
     // The user's own keyboard shortcut overrides, as { hotkeyId: combo }. Only the
     // bindings they changed are stored; the rest come from the instance defaults
     // (app_setting key 'hotkeys') and then the built-in ones.
@@ -1110,6 +1113,9 @@ export const gitManagedRepository = pgTable(
       onDelete: 'set null',
     }),
     issueComments: boolean('issue_comments').notNull().default(false),
+    // In 'two_way' mode with issueComments, a comment written here also goes to the
+    // repository issue, under the author's own account on the host (user_git_account).
+    issueCommentsPush: boolean('issue_comments_push').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1158,6 +1164,53 @@ export const gitIssueLink = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.repositoryId, t.number)],
+);
+
+// A comment here and its copy on a repository issue, whichever side it was written
+// on, so an edit or a delete on one side reaches the other.
+export const gitCommentLink = pgTable(
+  'git_comment_link',
+  {
+    id: serial('id').primaryKey(),
+    repositoryId: integer('repository_id')
+      .notNull()
+      .references(() => gitManagedRepository.id, { onDelete: 'cascade' }),
+    activityId: integer('activity_id')
+      .notNull()
+      .unique()
+      .references(() => issueActivity.id, { onDelete: 'cascade' }),
+    externalId: text('external_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.repositoryId, t.externalId)],
+);
+
+// A member's own account on a repository host, used to write their comments on a
+// synced repository issue as them. One per host; the token is stored encrypted
+// (AES-256-GCM, @repo/crypto).
+export const userGitAccount = pgTable(
+  'user_git_account',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    baseUrl: text('base_url').notNull(),
+    // The account's id on the host. A comment there is matched to a member by it: a login
+    // can pass to someone else after a rename.
+    accountId: text('account_id').notNull(),
+    accountLogin: text('account_login').notNull(),
+    ciphertext: text('ciphertext').notNull(),
+    iv: text('iv').notNull(),
+    authTag: text('auth_tag').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.userId, t.baseUrl),
+    index('user_git_account_account_idx').on(t.baseUrl, t.accountId),
+  ],
 );
 
 // Per-team notification provider credentials: the outbound channels every project
@@ -2040,6 +2093,9 @@ export const issueAttachment = pgTable(
     filename: text('filename').notNull(),
     contentType: text('content_type').notNull(),
     sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    // The address of the file this one was copied from, such as an image of a synced
+    // repository issue. The same text synced again reuses the copy.
+    sourceUrl: text('source_url'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('issue_attachment_issue_idx').on(t.issueId)],
@@ -2268,6 +2324,9 @@ export const issueActivity = pgTable(
       onDelete: 'set null',
     }),
     actorName: text('actor_name'),
+    // The repository host an entry came from: a synced issue or comment, or a change a
+    // repository webhook made. Without a user, actor_name holds the account on that host.
+    actorSource: text('actor_source'),
     body: text('body'),
     action: text('action'),
     payload: jsonb('payload').$type<ActivityPayload>().notNull().default({}),
@@ -2277,6 +2336,10 @@ export const issueActivity = pgTable(
   },
   (t) => [
     check('issue_activity_kind_check', sql`${t.kind} IN ('comment', 'activity')`),
+    check(
+      'issue_activity_actor_source_check',
+      sql`${t.actorSource} IN ('github', 'gitlab', 'gitea', 'forgejo', 'bitbucket')`,
+    ),
     // Exactly one owner: an issue row or an initiative row, never both or neither.
     check(
       'issue_activity_owner_check',

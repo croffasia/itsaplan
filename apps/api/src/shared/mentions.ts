@@ -29,6 +29,19 @@ export function parseMentionHandles(text: string): string[] {
   return [...handles];
 }
 
+// The text with each mention rewritten by `rewrite`, and code, links and URLs as they are.
+export function rewriteMentions(text: string, rewrite: (handle: string) => string): string {
+  const mentions = (part: string) =>
+    part.replace(MENTION_RE, (_mention, handle: string) => rewrite(handle));
+  let out = '';
+  let last = 0;
+  for (const skipped of text.matchAll(NOT_A_MENTION_RE)) {
+    out += mentions(text.slice(last, skipped.index)) + skipped[0];
+    last = skipped.index + skipped[0].length;
+  }
+  return out + mentions(text.slice(last));
+}
+
 // The handles an edit added to a text. Editing a description must only reach the
 // people the edit newly named, not everyone the text already mentioned.
 export function addedMentionHandles(before: string, after: string): string[] {

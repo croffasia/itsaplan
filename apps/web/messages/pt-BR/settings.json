@@ -503,7 +503,7 @@
     "issueColumnHint": "Issues importadas também vêm para cá. Na sincronização bidirecional, as reabertas também.",
     "issueColumnNone": "Primeira coluna",
     "issueComments": "Copiar comentários",
-    "issueCommentsHint": "Novos comentários do repositório são copiados para a issue no quadro. Comentários feitos no quadro ficam lá.",
+    "issueCommentsHint": "Os novos comentários do repositório são copiados para a issue do quadro.",
     "importIssues": "Importar issues abertas",
     "importIssuesHint": "Issues que já estão no quadro são ignoradas.",
     "importIssuesAction": "Importar",
@@ -522,7 +522,21 @@
     "changeType": "Alterar tipo…",
     "noType": "Nenhum tipo.",
     "noRepositoryLabels": "Este repositório não tem etiquetas.",
-    "manualSetupHint": "Para um repositório que nenhuma conta de provedor alcança. Assim as issues não são sincronizadas."
+    "manualSetupHint": "Para um repositório que nenhuma conta de provedor alcança. Assim as issues não são sincronizadas.",
+    "issueCommentsPush": "Enviar comentários ao repositório",
+    "issueCommentsPushHint": "Os comentários escritos aqui são publicados na issue do repositório com a conta do próprio autor.",
+    "issueCommentsPushAs": "Os seus são enviados como {login}.",
+    "issueCommentsPushNotice": "Só são enviados os comentários de membros que conectaram a conta do {provider} no perfil. Os seus ficam aqui.",
+    "accountConnectAction": "Conectar conta do {provider}",
+    "accountConnectTitle": "Conecte sua conta do repositório",
+    "accountConnectHint": "Usada para agir no repositório em seu nome.",
+    "accountHost": "Serviço",
+    "accountTokenHint": "Use um token que possa escrever comentários em issues. Ele é criptografado e não é mostrado de novo.",
+    "accountCheck": "Verificar token",
+    "accountSignsInAs": "O token entra como {login}.",
+    "accountConnectThis": "Conectar esta conta",
+    "accountCheckFailed": "Não foi possível verificar o token.",
+    "accountConnected": "Conta do {provider} conectada"
   },
   "importExport": {
     "jiraPreview": {

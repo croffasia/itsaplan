@@ -10,6 +10,7 @@ const item: ActivityItem = {
   kind: 'activity',
   actorUserId: 'user-1',
   actorName: 'Owner',
+  actorSource: null,
   body: null,
   action: 'description',
   payload: {},

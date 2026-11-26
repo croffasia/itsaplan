@@ -1,0 +1,1 @@
+ALTER TABLE "issue_attachment" ADD COLUMN "source_url" text;

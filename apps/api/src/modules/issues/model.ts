@@ -2,7 +2,12 @@ import { t } from 'elysia';
 import { MAX_SUBTASK_DEPTH } from '@repo/db';
 import { agentExecutionState, runReceivedAt } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
-import { DevelopmentLinkResponse, LinkedRepositoryIssueResponse } from '#modules/git/model';
+import {
+  ActorSourceResponse,
+  DevelopmentLinkResponse,
+  LinkedRepositoryIssueResponse,
+  RepositoryCommentResponse,
+} from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
 import { instantQuery, isoDate } from '#shared/schemas';
 
@@ -374,12 +379,14 @@ export const FeedItemResponse = t.Object({
   replyToId: t.Nullable(t.Number()),
   actorUserId: t.Nullable(t.String()),
   actorName: t.Nullable(t.String()),
+  actorSource: ActorSourceResponse,
   body: t.Nullable(t.String()),
   action: t.Nullable(t.String()),
   payload: ActivityPayloadResponse,
   createdAt: t.String(),
   editedAt: t.Nullable(t.String()),
   reactions: t.Array(CommentReactionResponse),
+  repositoryComment: RepositoryCommentResponse,
 });
 
 export const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));

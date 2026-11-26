@@ -503,7 +503,7 @@
     "issueColumnHint": "Los tickets importados también van aquí. En la sincronización en ambos sentidos, también los reabiertos.",
     "issueColumnNone": "Primera columna",
     "issueComments": "Copiar comentarios",
-    "issueCommentsHint": "Los comentarios nuevos del repositorio se copian al ticket del tablero. Los comentarios hechos en el tablero se quedan ahí.",
+    "issueCommentsHint": "Los comentarios nuevos del repositorio se copian a la incidencia del tablero.",
     "importIssues": "Importar tickets abiertos",
     "importIssuesHint": "Se omiten los tickets que ya están en el tablero.",
     "importIssuesAction": "Importar",
@@ -522,7 +522,21 @@
     "changeType": "Cambiar tipo…",
     "noType": "Ningún tipo.",
     "noRepositoryLabels": "Este repositorio no tiene etiquetas.",
-    "manualSetupHint": "Para un repositorio al que no llega ninguna cuenta de proveedor. Así los tickets no se sincronizan."
+    "manualSetupHint": "Para un repositorio al que no llega ninguna cuenta de proveedor. Así los tickets no se sincronizan.",
+    "issueCommentsPush": "Enviar comentarios al repositorio",
+    "issueCommentsPushHint": "Los comentarios escritos aquí se publican en la incidencia del repositorio con la cuenta de su autor.",
+    "issueCommentsPushAs": "Los tuyos se envían como {login}.",
+    "issueCommentsPushNotice": "Solo se envían los comentarios de los miembros que conectaron su cuenta de {provider} en su perfil. Los tuyos se quedan aquí.",
+    "accountConnectAction": "Conectar cuenta de {provider}",
+    "accountConnectTitle": "Conecta tu cuenta del repositorio",
+    "accountConnectHint": "Se usa para actuar en el repositorio en tu nombre.",
+    "accountHost": "Servicio",
+    "accountTokenHint": "Usa un token que pueda escribir comentarios en incidencias. Se cifra y no se vuelve a mostrar.",
+    "accountCheck": "Comprobar token",
+    "accountSignsInAs": "El token inicia sesión como {login}.",
+    "accountConnectThis": "Conectar esta cuenta",
+    "accountCheckFailed": "No se pudo comprobar el token.",
+    "accountConnected": "Cuenta de {provider} conectada"
   },
   "importExport": {
     "jiraPreview": {

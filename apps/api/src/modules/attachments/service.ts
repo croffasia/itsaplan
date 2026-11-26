@@ -42,6 +42,7 @@ export async function createAttachment(input: {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  sourceUrl?: string;
 }): Promise<AttachmentRow> {
   return db.transaction(async (tx) => {
     await lockAttachmentStorage(tx, input.projectId);
@@ -54,6 +55,7 @@ export async function createAttachment(input: {
         filename: input.filename,
         contentType: input.contentType,
         sizeBytes: input.sizeBytes,
+        sourceUrl: input.sourceUrl ?? null,
       })
       .returning();
     return mapAttachment(row);

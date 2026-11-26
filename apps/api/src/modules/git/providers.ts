@@ -4,13 +4,45 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 // recognises a delivery by its headers, verifies it with the credential its
 // platform sends, and normalizes pull request, CI and issue events for the handler.
 
-// A pull request delivery in provider-neutral form. `defaultBranch` is null when
-// the payload does not carry it, which turns off the merged-into-default-branch
-// check for that delivery.
-export type GitProviderKey = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+export const GIT_PROVIDER_KEYS = ['github', 'gitlab', 'gitea', 'forgejo', 'bitbucket'] as const;
+export type GitProviderKey = (typeof GIT_PROVIDER_KEYS)[number];
+
+export const PROVIDER_LABEL: Record<GitProviderKey, string> = {
+  github: 'GitHub',
+  gitlab: 'GitLab',
+  gitea: 'Gitea',
+  forgejo: 'Forgejo',
+  bitbucket: 'Bitbucket',
+};
+
+// Where a delivery came from: the host, its name, and the account whose action sent it.
+export interface DeliveryOrigin {
+  key: GitProviderKey;
+  label: string;
+  sender: string | null;
+}
+
+// An activity entry's actor as one line of text, for places that show no host icon:
+// "octocat (GitHub)".
+export function actorText(name: string | null, source: string | null): string | null {
+  const host = source ? PROVIDER_LABEL[source as GitProviderKey] : undefined;
+  return name && host && name !== host ? `${name} (${host})` : name;
+}
+
+// The activity actor for an account on the host, or the host itself when there is none.
+export function hostActor(
+  name: string | null,
+  origin: Pick<DeliveryOrigin, 'key' | 'label'>,
+): { system: string; source: GitProviderKey } {
+  return { system: name ?? origin.label, source: origin.key };
+}
+
 export type PullRequestState = 'open' | 'merged' | 'closed';
 export type PipelineStatus = 'pending' | 'running' | 'success' | 'failed' | 'canceled' | 'skipped';
 
+// A pull request delivery in provider-neutral form. `defaultBranch` is null when
+// the payload does not carry it, which turns off the merged-into-default-branch
+// check for that delivery.
 export interface PullRequestEvent {
   kind: 'pull_request';
   action: 'opened' | 'updated' | 'merged' | 'closed';
@@ -84,10 +116,14 @@ export interface IssueEvent extends IssueSnapshot {
 
 export interface IssueCommentEvent {
   kind: 'issue_comment';
+  action: 'created' | 'edited' | 'deleted';
   repo: string;
   number: number;
+  id: string;
+  // Empty on a deleted comment.
   body: string;
   author: string | null;
+  authorId: string | null;
 }
 
 export type GitEvent =
@@ -105,6 +141,8 @@ export interface GitProvider {
   deliveryId(headers: DeliveryHeaders): string | undefined;
   // The repository the delivery came from, recorded as telemetry for any event.
   repo(payload: unknown): string | undefined;
+  // The account whose action sent the delivery, null when the payload names none.
+  sender(payload: unknown): string | null;
   parse(payload: unknown, headers: DeliveryHeaders): GitEvent | null;
 }
 
@@ -173,9 +211,10 @@ interface GithubPayload {
   };
   repository?: { full_name?: string; default_branch?: string; html_url?: string };
   issue?: GithubIssue;
-  comment?: { body?: string | null; user?: { login?: string } };
+  comment?: { id?: number; body?: string | null; user?: { id?: number; login?: string } };
   // Gitea and Forgejo send comments on pull requests as issue_comment too.
   is_pull?: boolean;
+  sender?: { login?: string };
   changes?: { title?: unknown; body?: unknown };
 }
 
@@ -252,21 +291,32 @@ function parseGithubIssue(payload: unknown): IssueEvent | null {
   };
 }
 
+const COMMENT_ACTIONS = ['created', 'edited', 'deleted'] as const;
+
 function parseGithubIssueComment(payload: unknown): IssueCommentEvent | null {
   const { action, issue, comment, repository, is_pull: isPull } = payload as GithubPayload;
-  if (action !== 'created' || isPull || issue?.pull_request || !issue?.number) return null;
-  if (!comment?.body || !repository?.full_name) return null;
+  const commentAction = COMMENT_ACTIONS.find((known) => known === action);
+  if (!commentAction || isPull || issue?.pull_request || !issue?.number) return null;
+  if (!comment?.id || !repository?.full_name) return null;
+  if (commentAction !== 'deleted' && !comment.body) return null;
   return {
     kind: 'issue_comment',
+    action: commentAction,
     repo: repository.full_name,
     number: issue.number,
-    body: comment.body,
+    id: String(comment.id),
+    body: comment.body ?? '',
     author: comment.user?.login ?? null,
+    authorId: comment.user?.id ? String(comment.user.id) : null,
   };
 }
 
 function githubRepo(payload: unknown): string | undefined {
   return (payload as GithubPayload).repository?.full_name;
+}
+
+function githubSender(payload: unknown): string | null {
+  return (payload as GithubPayload).sender?.login ?? null;
 }
 
 export function pipelineStatus(status: string | undefined): PipelineStatus | null {
@@ -385,6 +435,7 @@ const github: GitProvider = {
   verify: (secret, body, h) => hmacValid(secret, body, h['x-hub-signature-256']),
   deliveryId: (h) => h['x-github-delivery'],
   repo: githubRepo,
+  sender: githubSender,
   parse: parseGithubPayload,
 };
 
@@ -404,6 +455,7 @@ const gitea: GitProvider = {
     ),
   deliveryId: (h) => h['x-forgejo-delivery'] ?? h['x-gitea-delivery'],
   repo: githubRepo,
+  sender: githubSender,
   parse: parseGithubPayload,
 };
 
@@ -440,7 +492,7 @@ interface GitlabPayload {
   merge_request?: { iid?: number; source_branch?: string };
   issue?: { iid?: number; confidential?: boolean };
   labels?: { title?: string }[];
-  user?: { username?: string };
+  user?: { id?: number; username?: string };
   changes?: {
     draft?: { previous?: boolean; current?: boolean };
     title?: unknown;
@@ -480,19 +532,23 @@ function parseGitlabIssue(payload: GitlabPayload): IssueEvent | null {
 }
 
 // GitLab sends a note without an action before 16.x and with 'create' or 'update'
-// after; only a new note becomes a comment.
+// after. It sends nothing when a note is deleted.
 function parseGitlabNote(payload: GitlabPayload): IssueCommentEvent | null {
   const { object_attributes: note, project, issue, user } = payload;
-  if (note?.noteable_type !== 'Issue' || !note.note || !issue?.iid || issue.confidential)
-    return null;
-  if (note.action != null && note.action !== 'create') return null;
+  if (note?.noteable_type !== 'Issue' || !note.note || !note.id || !issue?.iid) return null;
+  if (issue.confidential) return null;
+  const action = note.action == null || note.action === 'create' ? 'created' : note.action;
+  if (action !== 'created' && action !== 'update') return null;
   if (!project?.path_with_namespace) return null;
   return {
     kind: 'issue_comment',
+    action: action === 'update' ? 'edited' : 'created',
     repo: project.path_with_namespace,
     number: issue.iid,
+    id: String(note.id),
     body: note.note,
     author: user?.username ?? null,
+    authorId: user?.id ? String(user.id) : null,
   };
 }
 
@@ -533,6 +589,7 @@ const gitlab: GitProvider = {
   // turn share its value, so it cannot identify a delivery on its own.
   deliveryId: (h) => h['idempotency-key'] ?? h['x-gitlab-event-uuid'],
   repo: (payload) => (payload as GitlabPayload).project?.path_with_namespace,
+  sender: (payload) => (payload as GitlabPayload).user?.username ?? null,
   parse: (payload) => {
     const { object_kind: kind, object_attributes: mr, project, changes } = payload as GitlabPayload;
     if (!project?.path_with_namespace) return null;
@@ -607,6 +664,7 @@ const gitlab: GitProvider = {
 };
 
 interface BitbucketPayload {
+  actor?: { nickname?: string; display_name?: string };
   branch?: {
     name?: string;
     target?: { hash?: string };
@@ -651,6 +709,10 @@ const bitbucket: GitProvider = {
   verify: (secret, body, h) => hmacValid(secret, body, h['x-hub-signature']),
   deliveryId: (h) => h['x-request-uuid'] ?? h['x-request-id'],
   repo: (payload) => (payload as BitbucketPayload).repository?.full_name,
+  sender: (payload) => {
+    const actor = (payload as BitbucketPayload).actor;
+    return actor?.nickname ?? actor?.display_name ?? null;
+  },
   parse: (payload, headers) => {
     const key = headers['x-event-key'];
     if (key === 'repo:branch_created' || key === 'repo:branch_deleted') {

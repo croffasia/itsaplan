@@ -42,6 +42,7 @@ describe('user preferences', () => {
       autoWatch: true,
       onboardingSeen: false,
       showcaseSeen: false,
+      unsentCommentNoticeHidden: false,
       lastProjectId: null,
       hotkeys: {},
     });
@@ -89,6 +90,7 @@ describe('user preferences', () => {
       autoWatch: false,
       onboardingSeen: true,
       showcaseSeen: true,
+      unsentCommentNoticeHidden: true,
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -110,6 +112,7 @@ describe('user preferences', () => {
       autoWatch: false,
       onboardingSeen: true,
       showcaseSeen: true,
+      unsentCommentNoticeHidden: true,
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link2, Pencil, Reply, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
+import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
+import GitHostMark from '@/components/common/git/GitHostMark';
 import Avatar from '@/components/common/Avatar';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
@@ -17,6 +19,7 @@ import { useCommentReactions } from '../../hooks/useCommentReactions';
 import { useDeleteComment } from '../../services/comments.service';
 import { reactedEmojis, type ReactionViewer } from '../../utils/reactions';
 import { writeClipboardText } from '../../utils/clipboard';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 import { useTranslations } from 'next-intl';
 
 // One comment inside a thread: a line of author, age and its actions over the
@@ -92,12 +95,15 @@ export default function CommentItem({
       )}
       <div className="flex items-center gap-2.5">
         <Avatar name={author} image={image} className="size-6 shrink-0 text-[10px]" />
-        <span className="truncate text-[13px] font-semibold">{author}</span>
+        <span className="flex min-w-0 items-center gap-1">
+          <span className="truncate text-[13px] font-semibold">{author}</span>
+          {item.actorSource && <ActorSourceIcon source={item.actorSource} />}
+        </span>
         <span className="shrink-0 text-xs text-muted-foreground">
           · {relativeTime(item.createdAt)}
           {item.editedAt && ` · ${t('edited')}`}
         </span>
-        {(onReply || canEdit || canDelete || toggle) && (
+        {(onReply || canEdit || canDelete || toggle || item.repositoryComment) && (
           <div className="ms-auto flex shrink-0 items-center gap-0.5 focus-within:opacity-100 has-data-[state=open]:opacity-100 sm:opacity-0 sm:group-hover/comment:opacity-100">
             {toggle && viewer && (
               <CommentReactionPicker
@@ -105,6 +111,25 @@ export default function CommentItem({
                 onPick={toggle}
                 className="max-sm:hidden"
               />
+            )}
+            {item.repositoryComment && (
+              <Button
+                asChild
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+              >
+                <a
+                  href={item.repositoryComment.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={t('openOnHost', {
+                    provider: GIT_PROVIDER_CONFIG[item.repositoryComment.provider].label,
+                  })}
+                >
+                  <GitHostMark host={item.repositoryComment.provider} className="size-3.5" />
+                </a>
+              </Button>
             )}
             {link && (
               <Button
@@ -188,7 +213,13 @@ export default function CommentItem({
           }}
           onClose={() => setConfirmingDelete(false)}
         >
-          <p className="text-sm text-muted-foreground">{t('deleteCommentConfirmation')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              composer?.repositoryIssue
+                ? 'deleteSyncedCommentConfirmation'
+                : 'deleteCommentConfirmation',
+            )}
+          </p>
         </ConfirmDialog>
       )}
     </div>

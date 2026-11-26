@@ -8,6 +8,7 @@ import { formatDateTime } from '@/utils/dates';
 import { ACTION_ICON } from '../../utils/activityIcons';
 import { useActivityText } from '../../hooks/useActivityText';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
+import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
 
 // One change-log entry in an activity list: icon, actor, the sentence describing
 // the change, and how long ago it happened. A change with a long value (a new
@@ -41,7 +42,11 @@ export default function ActivityLine({
         </span>
       )}
       <span className="min-w-0 flex-1 pt-0.5 text-muted-foreground">
-        <span className="font-medium text-foreground/85">{actor}</span> {line}
+        <span className="font-medium text-foreground/85">{actor}</span>
+        {item.actorSource && (
+          <ActorSourceIcon source={item.actorSource} className="ms-1 inline align-[-1px]" />
+        )}{' '}
+        {line}
         {popover && (
           <Popover>
             <PopoverTrigger asChild>

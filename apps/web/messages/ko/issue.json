@@ -269,9 +269,16 @@
     "deleteComment": "댓글 삭제",
     "deleteCommentTitle": "이 댓글을 삭제하시겠습니까?",
     "deleteCommentConfirmation": "댓글과 해당 답글이 영구적으로 삭제됩니다.",
+    "deleteSyncedCommentConfirmation": "댓글이 영구적으로 삭제됩니다. 답글은 남습니다.",
     "reactions": "반응",
     "addReaction": "반응 추가",
-    "reactedBy": "{names} 님이 {emoji} 반응을 남겼습니다"
+    "reactedBy": "{names} 님이 {emoji} 반응을 남겼습니다",
+    "unsentTitle": "이 댓글은 {provider}에 전달되지 않습니다",
+    "unsentBody": "이 이슈의 댓글은 작성자 본인의 계정으로 {provider}에 보내집니다. 계정을 연결하지 않아 이 댓글은 여기에만 남습니다.",
+    "unsentHide": "다시 표시하지 않기",
+    "unsentPostHere": "여기에만 게시",
+    "unsentConnect": "{provider} 연결",
+    "openOnHost": "{provider}에서 열기"
   },
   "stats": {
     "title": "통계",

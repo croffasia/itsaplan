@@ -343,5 +343,6 @@
     "redirectUrlHint": "آن را در Slack، در OAuth & Permissions → Redirect URLs اضافه کنید.",
     "workspace": "فضای کاری Slack",
     "workspaceHint": "فضای کاری Slack که برنامه در آن نصب شده است. فقط حساب‌های همین فضا می‌توانند وصل شوند."
-  }
+  },
+  "fromHost": "از {host}"
 }

@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { signOut, useSession } from '@/lib/auth-client';
-import { accountPath } from '@/utils/accountSections';
-import { useAccountSections } from '@/hooks/useAccountSections';
+import { accountPath, ACCOUNT_SECTIONS } from '@/utils/accountSections';
 import { useAccountSectionLabel } from '@/hooks/useSectionLabels';
 import Avatar from '@/components/common/Avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,7 +26,6 @@ export default function UserMenu() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const sectionLabel = useAccountSectionLabel();
-  const sections = useAccountSections();
   const { data: session, isPending } = useSession();
 
   // better-auth reads the session on the client, so the server renders no user and
@@ -65,7 +63,7 @@ export default function UserMenu() {
           <span className="text-xs text-muted-foreground capitalize">{t('role', { role })}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {sections.map(({ slug, icon: Icon }) => (
+        {ACCOUNT_SECTIONS.map(({ slug, icon: Icon }) => (
           <DropdownMenuItem key={slug} asChild>
             <Link href={accountPath(slug)}>
               <Icon />

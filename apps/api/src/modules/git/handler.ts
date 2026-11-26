@@ -17,7 +17,7 @@ import {
   upsertBranchLinks,
   upsertPullRequestLinks,
 } from './development';
-import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
+import { hostActor, type DeliveryOrigin, type GitEvent, type PullRequestEvent } from './providers';
 import { columnStateTypes, firstColumnId, type GitSettings } from './service';
 import { postPullRequestLinkback } from './connections-service';
 import { issueWebPath } from '#modules/teams/ref';
@@ -61,37 +61,35 @@ async function resolveIssues(
 export async function handleGitEvent(
   project: ProjectRow,
   settings: GitSettings,
-  providerKey: GitProviderKey,
-  providerLabel: string,
+  origin: DeliveryOrigin,
   event: GitEvent,
 ): Promise<PullRequestOutcome | 'branch' | 'pipeline' | 'check' | 'issue' | 'comment'> {
-  if (event.kind === 'issue') return handleIssueEvent(project, providerKey, providerLabel, event);
-  if (event.kind === 'issue_comment')
-    return handleIssueComment(project, providerKey, providerLabel, event);
+  if (event.kind === 'issue') return handleIssueEvent(project, origin, event);
+  if (event.kind === 'issue_comment') return handleIssueComment(project, origin, event);
   if (event.kind === 'check') {
-    await updateCheckLinks(project.id, providerKey, event);
+    await updateCheckLinks(project.id, origin.key, event);
     return 'check';
   }
   if (event.kind === 'pipeline') {
-    await updatePipelineLinks(project.id, providerKey, event);
+    await updatePipelineLinks(project.id, origin.key, event);
     return 'pipeline';
   }
 
   if (event.kind === 'branch') {
     if (event.action === 'deleted') {
-      await removeBranchLinks(project.id, null, providerKey, event.repo, event.branch);
+      await removeBranchLinks(project.id, null, origin.key, event.repo, event.branch);
       return 'branch';
     }
     const branchIssues = await resolveIssues(project, parseIssueIdentifiers(event.branch));
     await upsertBranchLinks(
       branchIssues.map((issue) => issue.id),
-      providerKey,
+      origin.key,
       event,
     );
     return 'branch';
   }
 
-  await updatePullRequestLinks(project.id, providerKey, event);
+  await updatePullRequestLinks(project.id, origin.key, event);
   const magic = parseMagicWords(`${event.title}\n${event.body}`);
   const skipped = new Set(magic.skipped.map(refId));
   const branchRefs = parseIssueIdentifiers(event.sourceBranch ?? '').filter(
@@ -107,14 +105,14 @@ export async function handleGitEvent(
   const skippedIssues = await resolveIssues(project, magic.skipped);
   await removePullRequestLinks(
     skippedIssues.map((issue) => issue.id),
-    providerKey,
+    origin.key,
     event,
   );
   if (event.sourceBranch) {
     await removeBranchLinks(
       project.id,
       skippedIssues.map((issue) => issue.id),
-      providerKey,
+      origin.key,
       event.repo,
       event.sourceBranch,
     );
@@ -123,12 +121,12 @@ export async function handleGitEvent(
   const uniqueIssues = await resolveIssues(project, [...refs.closes, ...refs.references]);
   const promotedIssueIds = await promoteBranchLinksToPullRequest(
     uniqueIssues.map((issue) => issue.id),
-    providerKey,
+    origin.key,
     event,
   );
   const insertedIssueIds = await upsertPullRequestLinks(
     uniqueIssues.map((item) => item.id),
-    providerKey,
+    origin.key,
     event,
   );
   const newIssueIds = [...new Set([...promotedIssueIds, ...insertedIssueIds])];
@@ -145,7 +143,7 @@ export async function handleGitEvent(
     try {
       await postPullRequestLinkback(
         project.id,
-        providerKey,
+        origin.key,
         event.repo,
         event.number,
         `Linked to ${items.length === 1 ? 'an issue' : 'issues'} in It's a Plan:\n\n${items.join('\n')}`,
@@ -155,17 +153,17 @@ export async function handleGitEvent(
       // not make a verified webhook fail or repeat its issue automation.
     }
   }
-  return handlePullRequestEvent(project, settings, providerLabel, event, refs);
+  return handlePullRequestEvent(project, settings, origin, event, refs);
 }
 
 export async function handlePullRequestEvent(
   project: { id: number; key: string },
   settings: GitSettings,
-  providerLabel: string,
+  origin: DeliveryOrigin,
   event: PullRequestEvent,
   parsed = parseMagicWords(`${event.title}\n${event.body}`),
 ): Promise<PullRequestOutcome> {
-  const actor: ActivityActor = { system: providerLabel };
+  const actor: ActivityActor = hostActor(origin.sender, origin);
   const projectKey = project.key.toUpperCase();
   const inProject = (refs: IssueRef[]) => refs.filter((r) => r.key === projectKey);
   const prEntry = (outcome: string) => ({

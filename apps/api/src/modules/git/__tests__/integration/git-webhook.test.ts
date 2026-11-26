@@ -247,6 +247,7 @@ describe('Repository webhook', () => {
     const prEntry = items.find((i: { action: string | null }) => i.action === 'git_pr');
     expect(prEntry).toMatchObject({
       actorName: 'GitHub',
+      actorSource: 'github',
       payload: {
         subject: { value: 'merged' },
         from: { value: 'acme/site#42', repo: 'acme/site', number: 42 },
@@ -256,6 +257,7 @@ describe('Repository webhook', () => {
     const statusEntry = items.find((i: { action: string | null }) => i.action === 'status');
     expect(statusEntry).toMatchObject({
       actorName: 'GitHub',
+      actorSource: 'github',
       payload: { to: { value: done.name, id: done.id } },
     });
   });
@@ -442,6 +444,7 @@ describe('Repository webhook', () => {
     const prEntry = feed.data!.items.find((i: { action: string | null }) => i.action === 'git_pr');
     expect(prEntry).toMatchObject({
       actorName: 'GitHub',
+      actorSource: 'github',
       payload: { subject: { value: 'opened' } },
     });
     expect((await issueState(asOwner, issue.id)).development).toMatchObject([
@@ -933,6 +936,7 @@ describe('Repository webhook', () => {
     expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
     expect(await prActor(asOwner, issue.id)).toMatchObject({
       actorName: 'GitLab',
+      actorSource: 'gitlab',
       payload: { subject: { value: 'merged' }, from: { value: 'acme/site#7' } },
     });
   });
@@ -1186,7 +1190,10 @@ describe('Repository webhook', () => {
     });
     expect(res.data).toMatchObject({ handled: 'merged' });
     expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
-    expect(await prActor(asOwner, issue.id)).toMatchObject({ actorName: 'Gitea' });
+    expect(await prActor(asOwner, issue.id)).toMatchObject({
+      actorName: 'Gitea',
+      actorSource: 'gitea',
+    });
   });
 
   it('closes an issue on a merged Bitbucket pull request', async () => {
@@ -1202,7 +1209,10 @@ describe('Repository webhook', () => {
     });
     expect(res.data).toMatchObject({ handled: 'merged' });
     expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
-    expect(await prActor(asOwner, issue.id)).toMatchObject({ actorName: 'Bitbucket' });
+    expect(await prActor(asOwner, issue.id)).toMatchObject({
+      actorName: 'Bitbucket',
+      actorSource: 'bitbucket',
+    });
   });
 
   it('rejects a Bitbucket delivery with no signature', async () => {
@@ -1231,7 +1241,71 @@ describe('Repository webhook', () => {
       'x-forgejo-delivery': crypto.randomUUID(),
     });
     expect(res.data).toMatchObject({ handled: 'merged' });
-    expect(await prActor(asOwner, issue.id)).toMatchObject({ actorName: 'Forgejo' });
+    expect(await prActor(asOwner, issue.id)).toMatchObject({
+      actorName: 'Forgejo',
+      actorSource: 'forgejo',
+    });
+  });
+
+  it('names the account that acted, with its host, as the actor', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const sign = (payload: unknown) =>
+      createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+    const cases = [
+      {
+        source: 'github',
+        name: 'octocat',
+        send: (body: string) =>
+          deliver(webhookId, secret, { ...prPayload({ body }), sender: { login: 'octocat' } }),
+      },
+      {
+        source: 'gitea',
+        name: 'teapot',
+        send: (body: string) => {
+          const payload = { ...prPayload({ number: 43, body }), sender: { login: 'teapot' } };
+          return deliverRaw(webhookId, payload, {
+            'x-gitea-event': 'pull_request',
+            'x-gitea-signature': sign(payload),
+            'x-gitea-delivery': crypto.randomUUID(),
+          });
+        },
+      },
+      {
+        source: 'gitlab',
+        name: 'tanuki',
+        send: (body: string) =>
+          deliverRaw(
+            webhookId,
+            { ...gitlabPayload(body), user: { username: 'tanuki' } },
+            {
+              'x-gitlab-event': 'Merge Request Hook',
+              'x-gitlab-token': secret,
+              'x-gitlab-event-uuid': crypto.randomUUID(),
+            },
+          ),
+      },
+      {
+        source: 'bitbucket',
+        name: 'bucketeer',
+        send: (body: string) => {
+          const payload = { ...bitbucketPayload(body), actor: { nickname: 'bucketeer' } };
+          return deliverRaw(webhookId, payload, {
+            'x-event-key': 'pullrequest:fulfilled',
+            'x-hub-signature': `sha256=${sign(payload)}`,
+            'x-request-uuid': crypto.randomUUID(),
+          });
+        },
+      },
+    ];
+    for (const { source, name, send } of cases) {
+      const issue = (await createIssue(asOwner, columns[0].id)).data!;
+      const res = await send(`Fixes MKT-${issue.sequenceNumber}`);
+      expect(res.data).toMatchObject({ handled: 'merged' });
+      expect(await prActor(asOwner, issue.id)).toMatchObject({
+        actorName: name,
+        actorSource: source,
+      });
+    }
   });
 
   it('rejects a delivery no provider recognises', async () => {

@@ -503,7 +503,7 @@
     "issueColumnHint": "가져온 이슈도 여기로 옵니다. 양방향 동기화에서는 다시 열린 이슈도 옵니다.",
     "issueColumnNone": "첫 번째 열",
     "issueComments": "댓글 복사",
-    "issueCommentsHint": "저장소의 새 댓글이 보드의 이슈로 복사됩니다. 보드에서 작성한 댓글은 보드에 남습니다.",
+    "issueCommentsHint": "저장소의 새 댓글이 보드 이슈로 복사됩니다.",
     "importIssues": "열린 이슈 가져오기",
     "importIssuesHint": "이미 보드에 있는 이슈는 건너뜁니다.",
     "importIssuesAction": "가져오기",
@@ -522,7 +522,21 @@
     "changeType": "유형 변경…",
     "noType": "유형이 없습니다.",
     "noRepositoryLabels": "이 저장소에는 라벨이 없습니다.",
-    "manualSetupHint": "공급자 계정으로 접근할 수 없는 저장소용입니다. 이 방식으로는 이슈가 동기화되지 않습니다."
+    "manualSetupHint": "공급자 계정으로 접근할 수 없는 저장소용입니다. 이 방식으로는 이슈가 동기화되지 않습니다.",
+    "issueCommentsPush": "댓글을 저장소로 보내기",
+    "issueCommentsPushHint": "여기에 작성한 댓글은 작성자 본인의 계정으로 저장소 이슈에 게시됩니다.",
+    "issueCommentsPushAs": "내 댓글은 {login}(으)로 보내집니다.",
+    "issueCommentsPushNotice": "프로필에서 {provider} 계정을 연결한 멤버의 댓글만 보내집니다. 내 댓글은 여기에만 남습니다.",
+    "accountConnectAction": "{provider} 계정 연결",
+    "accountConnectTitle": "저장소 계정 연결",
+    "accountConnectHint": "저장소에서 나를 대신해 작업할 때 사용합니다.",
+    "accountHost": "서비스",
+    "accountTokenHint": "이슈 댓글을 쓸 수 있는 토큰을 사용하세요. 토큰은 암호화되며 다시 표시되지 않습니다.",
+    "accountCheck": "토큰 확인",
+    "accountSignsInAs": "이 토큰은 {login}(으)로 로그인합니다.",
+    "accountConnectThis": "이 계정 연결",
+    "accountCheckFailed": "토큰을 확인하지 못했습니다.",
+    "accountConnected": "{provider} 계정이 연결되었습니다"
   },
   "importExport": {
     "jiraPreview": {

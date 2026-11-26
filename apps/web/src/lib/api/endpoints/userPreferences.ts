@@ -50,6 +50,9 @@ export interface AccountPreferences {
   onboardingSeen: boolean;
   // Whether the instance owner closed the request to list the company on itsaplan.dev.
   showcaseSeen: boolean;
+  // Whether the user turned off the notice that a comment on a synced issue stays here
+  // until they connect their account on the repository host.
+  unsentCommentNoticeHidden: boolean;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in

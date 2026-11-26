@@ -2,6 +2,8 @@ import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
+import { requireBrowserSession, requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
 import { noContent } from '#shared/http';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
@@ -10,12 +12,16 @@ import {
   GitProviderConnectionListResponse,
   GitManagedRepositoryResponse,
   GitProviderConnectionResponse,
+  GitAccountCheckResponse,
+  GitAccountResponse,
   GitSettingsResponse,
   ImportRepositoryIssuesResponse,
   RepositoryMappingResponse,
   availableRepositoriesQuery,
   connectRepositoriesBody,
   createGitProviderConnectionBody,
+  gitAccountBody,
+  gitAccountParams,
   gitManagedRepositoryParams,
   gitProviderConnectionParams,
   importRepositoryIssuesBody,
@@ -39,6 +45,12 @@ import {
   updateManagedRepository,
 } from './connections-service';
 import { importRepositoryIssues } from './issue-sync';
+import {
+  checkGitAccount,
+  connectGitAccount,
+  disconnectGitAccount,
+  listGitAccounts,
+} from './accounts';
 
 export const gitSettingsRoutes = new Elysia({
   name: 'git-settings',
@@ -250,5 +262,64 @@ export const gitSettingsRoutes = new Elysia({
           'Create an issue for each open repository issue on the page that has none yet. ' +
           'Call again with nextPage until it is null.',
       },
+    },
+  );
+
+// The session user's own accounts on repository hosts, which their comments on a synced
+// repository issue are written under.
+export const gitAccountRoutes = new Elysia({
+  name: 'git-accounts',
+  detail: { tags: ['Git'] },
+})
+  .use(authContext)
+  .onBeforeHandle(({ request }) => {
+    requireBrowserSession(request, 'Repository accounts are managed from a browser session');
+  })
+  .get('/account/git-accounts', ({ user }) => listGitAccounts(requireUser(user).id), {
+    response: { 200: t.Array(GitAccountResponse), ...errors(401, 403) },
+    detail: { summary: "List the current user's repository host accounts" },
+  })
+  .post(
+    '/account/git-accounts/check',
+    ({ user, body }) => {
+      requireUser(user);
+      return checkGitAccount(body);
+    },
+    {
+      body: gitAccountBody,
+      response: { 200: GitAccountCheckResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Check a repository host token',
+        description: 'Return the account the token signs in as, without storing the token.',
+      },
+    },
+  )
+  .post(
+    '/account/git-accounts',
+    async ({ user, body, set }) => {
+      const account = await connectGitAccount(requireUser(user).id, body);
+      set.status = 201;
+      return account;
+    },
+    {
+      body: gitAccountBody,
+      response: { 201: GitAccountResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Connect a repository host account',
+        description: 'Store the token of an account on the host; it replaces the one there.',
+      },
+    },
+  )
+  .delete(
+    '/account/git-accounts/:accountId',
+    async ({ user, params }) => {
+      if (!(await disconnectGitAccount(requireUser(user).id, params.accountId)))
+        throw new HttpError(404, 'Account not connected');
+      return noContent();
+    },
+    {
+      params: gitAccountParams,
+      response: { 204: t.Void(), ...errors(401, 403, 404) },
+      detail: { summary: 'Disconnect a repository host account' },
     },
   );

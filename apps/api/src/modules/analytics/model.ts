@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { agentRunTrigger } from '#modules/agents/model';
+import { ActorSourceResponse } from '#modules/git/model';
 import { instantQuery } from '#shared/schemas';
 
 export const StatsDto = t.Object({
@@ -60,6 +61,7 @@ const ActivityItem = t.Object({
   kind: t.String(),
   actorUserId: t.Nullable(t.String()),
   actorName: t.Nullable(t.String()),
+  actorSource: ActorSourceResponse,
   body: t.Nullable(t.String()),
   action: t.Nullable(t.String()),
   payload: ActivityPayloadResponse,

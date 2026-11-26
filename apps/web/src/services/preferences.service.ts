@@ -31,6 +31,7 @@ export const PREFERENCE_DEFAULTS: AccountPreferences = {
   autoWatch: true,
   onboardingSeen: false,
   showcaseSeen: false,
+  unsentCommentNoticeHidden: false,
   lastProjectId: null,
   hotkeys: {},
 };

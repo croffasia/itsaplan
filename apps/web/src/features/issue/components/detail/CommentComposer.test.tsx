@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
 import common from '../../../../../messages/en/common.json';
 import issue from '../../../../../messages/en/issue.json';
+import settings from '../../../../../messages/en/settings.json';
 
 const replacedGlobals = [
   'window',
@@ -15,7 +16,18 @@ const replacedGlobals = [
   'localStorage',
   'HTMLElement',
   'HTMLTextAreaElement',
+  'HTMLFormElement',
+  'DocumentFragment',
+  'Node',
+  'Element',
+  'SVGElement',
+  'NodeFilter',
   'Event',
+  'CustomEvent',
+  'getComputedStyle',
+  'MutationObserver',
+  'requestAnimationFrame',
+  'cancelAnimationFrame',
   'fetch',
   'IS_REACT_ACT_ENVIRONMENT',
 ] as const;
@@ -52,6 +64,7 @@ beforeEach(async () => {
       value: async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
         requested.push(init?.method === 'POST' ? `POST ${url}` : url);
+        if (url.includes('/account/git-accounts')) return Response.json([]);
         return Response.json(url.includes('/mention-candidates') ? candidates : null);
       },
     },
@@ -85,7 +98,7 @@ async function show(props: ComposerProps | null) {
   await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
-        <NextIntlClientProvider locale="en" messages={{ common, issue }} timeZone="UTC">
+        <NextIntlClientProvider locale="en" messages={{ common, issue, settings }} timeZone="UTC">
           {props && (
             <CommentComposer
               issueId={1}
@@ -93,6 +106,7 @@ async function show(props: ComposerProps | null) {
               userId="u-ana"
               authorName="Ana"
               authorImage={null}
+              repositoryIssue={null}
               {...props}
             />
           )}
@@ -179,5 +193,59 @@ describe('CommentComposer drafts', () => {
     );
     await show({});
     assert.equal(boxText(), '');
+  });
+});
+
+describe('CommentComposer on an issue synced with a repository', () => {
+  const repositoryIssue = {
+    provider: 'github',
+    repository: 'acme/site',
+    number: 7,
+    url: null,
+    state: 'open',
+    baseUrl: 'https://github.com',
+    pushComments: true,
+  } as const;
+  const posted = () =>
+    requested.some((url) => url.startsWith('POST ') && url.endsWith('/issues/1/comments'));
+
+  it('says first that the comment stays here when its author has no account on the host', async () => {
+    await show({ repositoryIssue });
+    await type('stays here');
+    await click('Comment');
+
+    assert.ok(document.body.textContent!.includes("This comment won't reach GitHub"));
+    assert.equal(posted(), false);
+    await click('Post here only');
+    assert.equal(posted(), true);
+  });
+
+  it('keeps the connect dialog open when the notice is turned off on the way', async () => {
+    const { qk } = await import('@/services/queryKeys');
+    const { PREFERENCE_DEFAULTS } = await import('@/services/preferences.service');
+    client.setQueryData(qk.accountPreferences, PREFERENCE_DEFAULTS);
+    const fetchRest = globalThis.fetch;
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: (input: RequestInfo | URL, init?: RequestInit) =>
+        init?.method === 'PATCH'
+          ? Response.json({ ...PREFERENCE_DEFAULTS, unsentCommentNoticeHidden: true })
+          : fetchRest(input, init),
+    });
+    await show({ repositoryIssue });
+    await type('goes out');
+    await click('Comment');
+    await act(async () => document.getElementById('unsent-comment-hide')!.click());
+    await click('Connect GitHub');
+
+    assert.ok(document.body.textContent!.includes('Connect your repository account'));
+  });
+
+  it('posts at once when the repository does not take comments', async () => {
+    await show({ repositoryIssue: { ...repositoryIssue, pushComments: false } });
+    await type('plain');
+    await click('Comment');
+
+    assert.equal(posted(), true);
   });
 });

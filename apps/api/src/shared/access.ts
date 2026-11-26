@@ -1,6 +1,7 @@
 import { db, project, projectMember, team, teamRole } from '@repo/db';
 import { and, eq, inArray, isNull, type SQLWrapper } from 'drizzle-orm';
 import { HttpError } from './lib';
+import { getMcpOAuthToken } from './mcp-request';
 import {
   getProjectById,
   getProjectByRef,
@@ -43,6 +44,18 @@ export interface AuthUser {
   id: string;
   email?: string | null;
   role?: string | null;
+}
+
+// Settings that decide what reaches the person's account are changed only by them, signed
+// in through the browser: an API key or an agent's OAuth token must not change them.
+export function requireBrowserSession(request: Request, message: string) {
+  if (
+    request.headers.get('authorization') ||
+    request.headers.get('x-api-key') ||
+    getMcpOAuthToken(request)
+  ) {
+    throw new HttpError(403, message);
+  }
 }
 
 // Asserts a session is present, returning the user. Handlers under the planner

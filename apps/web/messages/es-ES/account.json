@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Cuentas",
     "title": "Cuentas",
-    "description": "Conecta cuentas externas para iniciar sesión con ellas.",
+    "description": "Las cuentas con las que inicias sesión y tus cuentas en servicios de repositorios.",
     "googleDescription": "Inicia sesión con tu cuenta de Google.",
     "connected": "Conectada",
     "setPasswordFirst": "Define primero una contraseña",
@@ -87,7 +87,10 @@
     "disconnect": "Desconectar",
     "loadFailed": "No se han podido cargar las cuentas conectadas.",
     "connectFailed": "No se ha podido conectar Google.",
-    "disconnectFailed": "No se ha podido desconectar esta cuenta."
+    "disconnectFailed": "No se ha podido desconectar esta cuenta.",
+    "repositoryAccount": "Cuenta del repositorio",
+    "repositoryAccountDescription": "Actúa en los repositorios en tu nombre.",
+    "repositoryAccountDisconnected": "Cuenta del repositorio desconectada"
   },
   "preferences": {
     "label": "Preferencias",

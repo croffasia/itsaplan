@@ -41,6 +41,9 @@ export interface GitManagedRepository {
   // Where new issues land; null is the project's first column.
   issueColumnId: number | null;
   issueComments: boolean;
+  // In two-way sync with issueComments, a comment written here also goes to the
+  // repository issue, under its author's own account on the host.
+  issueCommentsPush: boolean;
 }
 
 // The project label and the issue type a repository label becomes; either may be null.
@@ -75,6 +78,10 @@ export interface LinkedRepositoryIssue {
   number: number;
   url: string | null;
   state: 'open' | 'closed';
+  baseUrl: string;
+  // Whether a comment written here goes to the repository issue, for an author who
+  // connected their account on the host.
+  pushComments: boolean;
 }
 
 export interface AvailableGitRepositoryPage {
@@ -257,6 +264,7 @@ export const updateGitRepository = (
     issueSync?: IssueSyncMode;
     issueColumnId?: number | null;
     issueComments?: boolean;
+    issueCommentsPush?: boolean;
     labelMappings?: RepositoryLabelMapping[];
   },
 ) =>

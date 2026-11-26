@@ -343,5 +343,6 @@
     "redirectUrlHint": "Ajoutez-la dans Slack, sous OAuth & Permissions → Redirect URLs.",
     "workspace": "Espace de travail Slack",
     "workspaceHint": "L'espace de travail Slack où l'app est installée. Seuls ses comptes peuvent se connecter."
-  }
+  },
+  "fromHost": "Depuis {host}"
 }

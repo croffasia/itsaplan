@@ -343,5 +343,6 @@
     "redirectUrlHint": "Tambahkan di Slack, pada OAuth & Permissions → Redirect URLs.",
     "workspace": "Workspace Slack",
     "workspaceHint": "Workspace Slack tempat aplikasi dipasang. Hanya akun di workspace ini yang dapat terhubung."
-  }
+  },
+  "fromHost": "Dari {host}"
 }

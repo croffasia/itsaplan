@@ -177,7 +177,9 @@ export function providerErrorMessage(
     return `${label} could not find this repository, or the token cannot access it.`;
   }
   if (status === 422) {
-    return `${label} rejected the webhook configuration. Check repository permissions and existing hooks.`;
+    return message
+      ? `${label} rejected the request: ${message}`
+      : `${label} rejected the webhook configuration. Check repository permissions and existing hooks.`;
   }
   return `${label} request failed with status ${status}.`;
 }
@@ -212,7 +214,19 @@ async function providerRequest(
         .json()
         .catch(() => null),
     );
-    const message = text(body?.message) ?? text(body?.error_description) ?? text(body?.error) ?? '';
+    // GitHub answers a 422 with "Validation Failed" and gives the reason only in `errors`.
+    const reasons = (Array.isArray(body?.errors) ? body.errors : []).map(
+      (item: unknown) =>
+        text(item) ??
+        text(record(item)?.message) ??
+        [record(item)?.resource, record(item)?.field, record(item)?.code].filter(text).join(' '),
+    );
+    const message = [
+      text(body?.message) ?? text(body?.error_description) ?? text(body?.error),
+      ...reasons,
+    ]
+      .filter(Boolean)
+      .join(': ');
     const actionable = [401, 403, 404, 422].includes(response.status);
     throw new HttpError(
       actionable ? 400 : 502,

@@ -23,6 +23,7 @@ interface Hook {
 
 function fakeProvider(provider: FakeProvider) {
   const hooks = new Map<number, Hook>();
+  const control = { refuseCreate: false };
   let nextId = 1;
   const prefix = API_PREFIX[provider];
   const hooksPath = provider === 'gitlab' ? '/projects/1/hooks' : '/repos/acme/site/hooks';
@@ -55,6 +56,20 @@ function fakeProvider(provider: FakeProvider) {
         return Response.json([...hooks.values()].map(show));
       }
       if (path === hooksPath && req.method === 'POST') {
+        if (control.refuseCreate)
+          return Response.json(
+            {
+              message: 'Validation Failed',
+              errors: [
+                {
+                  resource: 'Hook',
+                  code: 'custom',
+                  message: 'Hook already exists on this repository',
+                },
+              ],
+            },
+            { status: 422 },
+          );
         const hook = { id: nextId++, ...read((await req.json()) as Record<string, unknown>) };
         hooks.set(hook.id, hook);
         return Response.json(show(hook), { status: 201 });
@@ -69,7 +84,12 @@ function fakeProvider(provider: FakeProvider) {
       return Response.json({ message: 'Not Found' }, { status: 404 });
     },
   });
-  return { baseUrl: `http://127.0.0.1:${server.port}`, hooks, stop: () => server.stop(true) };
+  return {
+    baseUrl: `http://127.0.0.1:${server.port}`,
+    hooks,
+    control,
+    stop: () => server.stop(true),
+  };
 }
 
 async function setup(provider: FakeProvider, fake: ReturnType<typeof fakeProvider>) {
@@ -189,5 +209,25 @@ describe('Managed repository webhooks', () => {
     expect(connections.data![0]!.repositories).toMatchObject([
       { fullName: 'acme/site', status: 'connected', lastError: null },
     ]);
+  });
+
+  it("shows the provider's reason when it refuses the webhook", async () => {
+    fake = fakeProvider('github');
+    fake.control.refuseCreate = true;
+    const owner = await signUpTestUser({ name: 'Owner' });
+    const asOwner = authedApi(owner.cookie);
+    const created = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
+    const connection = await saveToken(asOwner, created.data!.teamId, 'github', fake.baseUrl);
+
+    const res = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .settings.git.connections({ connectionId: connection.id })
+      .repositories.post({ externalIds: ['1'] });
+
+    expect(res.status).toBe(400);
+    expect(res.error!.value).toMatchObject({
+      error:
+        'GitHub rejected the request: Validation Failed: Hook already exists on this repository',
+    });
   });
 });

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { qk } from '@/services/queryKeys';
 import { useAuthConfigQuery } from '@/services/authConfig.service';
-import { linkSocial, listAccounts, unlinkAccount } from '@/lib/auth-client';
+import { accountInfo, linkSocial, listAccounts, unlinkAccount } from '@/lib/auth-client';
 
 // Data for the Accounts page: the sign-in providers connected to the account, read
 // and changed through better-auth (so its baseURL and the session cookie are reused).
@@ -25,6 +25,21 @@ export function useLinkedAccountsQuery() {
       if (error) throw new Error(error.message ?? t('loadFailed'));
       return (data ?? []) as LinkedAccount[];
     },
+  });
+}
+
+// The address of a connected provider account. better-auth reads it from the id token the
+// provider issued when the account was connected; no address is stored of our own. Null
+// when the provider reports none, and the page then says only that it is connected.
+export function useLinkedAccountEmail(id: string | undefined) {
+  return useQuery({
+    queryKey: qk.linkedAccountInfo(id ?? ''),
+    enabled: id !== undefined,
+    queryFn: async () => {
+      const { data } = await accountInfo({ query: { accountId: id ?? '' } });
+      return data?.user.email ?? null;
+    },
+    retry: false,
   });
 }
 

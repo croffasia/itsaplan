@@ -8,7 +8,7 @@ import {
   setDesktopNotifications,
   useDesktopNotificationsState,
 } from '@/hooks/useDesktopNotifications';
-import AccountNotificationChannelRow from './AccountNotificationChannelRow';
+import AccountServiceRow from '../shared/AccountServiceRow';
 
 export default function AccountNotificationDesktop() {
   const t = useTranslations('account.notifications');
@@ -19,7 +19,7 @@ export default function AccountNotificationDesktop() {
   if (state === 'push') info = t('desktopReplacedByPush');
 
   return (
-    <AccountNotificationChannelRow icon={Monitor} name={t('desktop')} info={info}>
+    <AccountServiceRow icon={<Monitor />} name={t('desktop')} info={info}>
       {(state === 'blocked' || state === 'unsupported') && (
         <OnOffStatus on={false}>{t('off')}</OnOffStatus>
       )}
@@ -30,6 +30,6 @@ export default function AccountNotificationDesktop() {
           aria-label={t('desktopNotifications')}
         />
       )}
-    </AccountNotificationChannelRow>
+    </AccountServiceRow>
   );
 }

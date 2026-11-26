@@ -64,6 +64,7 @@ export const {
   sendVerificationEmail,
   // Connected sign-in providers, managed on the account's Accounts page.
   listAccounts,
+  accountInfo,
   linkSocial,
   unlinkAccount,
 } = authClient;

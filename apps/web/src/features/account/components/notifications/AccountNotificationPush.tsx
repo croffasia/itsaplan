@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import OnOffStatus from '@/components/common/fields/OnOffStatus';
 import { Switch } from '@/components/ui/switch';
 import { useAccountPushDevice } from '../../hooks/useAccountPushDevice';
-import AccountNotificationChannelRow from './AccountNotificationChannelRow';
+import AccountServiceRow from '../shared/AccountServiceRow';
 
 export default function AccountNotificationPush() {
   const t = useTranslations('account.notifications');
@@ -19,7 +19,7 @@ export default function AccountNotificationPush() {
   const locked = state === 'blocked' || state === 'unsupported' || state === 'unsupportedIos';
 
   return (
-    <AccountNotificationChannelRow icon={BellRing} name={t('push')} info={info}>
+    <AccountServiceRow icon={<BellRing />} name={t('push')} info={info}>
       {locked ? (
         <OnOffStatus on={false}>{t('off')}</OnOffStatus>
       ) : (
@@ -30,6 +30,6 @@ export default function AccountNotificationPush() {
           aria-label={t('pushNotifications')}
         />
       )}
-    </AccountNotificationChannelRow>
+    </AccountServiceRow>
   );
 }

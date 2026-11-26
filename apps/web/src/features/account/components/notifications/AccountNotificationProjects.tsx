@@ -14,7 +14,7 @@ import AccountNotificationEditDialog from './AccountNotificationEditDialog';
 import AccountNotificationProject from './AccountNotificationProject';
 import AccountNotificationProjectActions from './AccountNotificationProjectActions';
 import AccountNotificationProjectPick from './AccountNotificationProjectPick';
-import AccountNotificationSection from './AccountNotificationSection';
+import AccountListSection from '../shared/AccountListSection';
 import AccountNotificationTeam from './AccountNotificationTeam';
 
 export default function AccountNotificationProjects({
@@ -54,7 +54,7 @@ export default function AccountNotificationProjects({
   }
 
   return (
-    <AccountNotificationSection
+    <AccountListSection
       title={count > 0 ? t('selected', { count }) : t('projects')}
       sticky={picked !== null}
       actions={
@@ -127,6 +127,6 @@ export default function AccountNotificationProjects({
           onClose={() => setEditing(false)}
         />
       )}
-    </AccountNotificationSection>
+    </AccountListSection>
   );
 }

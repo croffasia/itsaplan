@@ -227,6 +227,18 @@ export const AvailableGitRepositoryPageResponse = t.Object({
   nextPage: t.Nullable(t.Number()),
 });
 
+export const ReachableGitRepositoryResponse = t.Object({
+  externalId: t.String(),
+  fullName: t.String(),
+  webUrl: t.String(),
+  projects: t.Array(t.Object({ id: t.Number(), name: t.String() })),
+});
+
+export const ReachableGitRepositoryPageResponse = t.Object({
+  repositories: t.Array(ReachableGitRepositoryResponse),
+  nextPage: t.Nullable(t.Number()),
+});
+
 export const connectRepositoriesBody = t.Object({
   externalIds: t.Array(t.String({ minLength: 1, maxLength: 200 }), {
     minItems: 1,

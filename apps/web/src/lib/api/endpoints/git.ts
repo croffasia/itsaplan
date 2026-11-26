@@ -224,6 +224,38 @@ export const disconnectGitProvider = (teamId: number, connectionId: number) =>
     method: 'DELETE',
   });
 
+// A repository a token reaches, with the projects that sync with it.
+export interface ReachableGitRepository {
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  projects: { id: number; name: string }[];
+}
+
+export interface ReachableGitRepositoryPage {
+  repositories: ReachableGitRepository[];
+  nextPage: number | null;
+}
+
+// The repositories the team's projects sync with through a connection.
+export const listTeamGitConnectionSyncedRepositories = (teamId: number, connectionId: number) =>
+  request<ReachableGitRepository[]>(
+    `/teams/${teamId}/settings/git/connections/${connectionId}/synced-repositories`,
+  );
+
+// The repositories whose webhooks a team connection manages.
+export const listTeamGitConnectionRepositories = (
+  teamId: number,
+  connectionId: number,
+  params: { page: number; search: string },
+) => {
+  const query = new URLSearchParams({ page: String(params.page) });
+  if (params.search) query.set('search', params.search);
+  return request<ReachableGitRepositoryPage>(
+    `/teams/${teamId}/settings/git/connections/${connectionId}/repositories?${query}`,
+  );
+};
+
 export const listAvailableGitRepositories = (
   projectKey: string,
   connectionId: number,

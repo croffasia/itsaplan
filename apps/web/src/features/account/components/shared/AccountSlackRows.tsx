@@ -1,18 +1,19 @@
 'use client';
 
-import { Hash } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   useDisconnectSlack,
   useSlackAccountsQuery,
   useStartSlackLink,
 } from '../../services/slack.service';
-import AccountNotificationChannelRow from './AccountNotificationChannelRow';
-import AccountNotificationConnectButton from './AccountNotificationConnectButton';
+import { rememberSlackReturn } from '../../utils/slackReturn';
+import AccountConnectButton from './AccountConnectButton';
+import AccountServiceRow from './AccountServiceRow';
 
 // The user's Slack accounts: a row for each Slack workspace their projects send to, and
 // for each they are still connected to. Connecting leaves for Sign in with Slack.
-export default function AccountNotificationSlack() {
+export default function AccountSlackRows({ icon }: { icon: ReactNode }) {
   const t = useTranslations('account.notifications');
   const tAccounts = useTranslations('account.accounts');
   const { data: accounts } = useSlackAccountsQuery();
@@ -20,15 +21,20 @@ export default function AccountNotificationSlack() {
   const disconnect = useDisconnectSlack();
 
   function connect(slackTeamId: string) {
-    start.mutate(slackTeamId, { onSuccess: ({ url }) => window.location.assign(url) });
+    start.mutate(slackTeamId, {
+      onSuccess: ({ url }) => {
+        rememberSlackReturn();
+        window.location.assign(url);
+      },
+    });
   }
 
   return accounts?.map(({ slackTeamId, slackTeamName, link }) => {
     const workspace = slackTeamName ?? t('slack');
     return (
-      <AccountNotificationChannelRow
+      <AccountServiceRow
         key={slackTeamId}
-        icon={Hash}
+        icon={icon}
         name={t('slack')}
         info={
           link
@@ -36,14 +42,15 @@ export default function AccountNotificationSlack() {
             : t('slackNotConnected', { workspace })
         }
       >
-        <AccountNotificationConnectButton
-          channel={t('slack')}
+        <AccountConnectButton
+          service={t('slack')}
           connected={link !== null}
           busy={start.isPending || disconnect.isPending}
+          disconnectWarning={tAccounts('slackDisconnectWarning', { workspace })}
           onConnect={() => connect(slackTeamId)}
-          onDisconnect={() => disconnect.mutate(slackTeamId)}
+          onDisconnect={() => disconnect.mutateAsync(slackTeamId)}
         />
-      </AccountNotificationChannelRow>
+      </AccountServiceRow>
     );
   });
 }

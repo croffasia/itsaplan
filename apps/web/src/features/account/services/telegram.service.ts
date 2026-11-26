@@ -6,6 +6,7 @@ import {
   getTelegramAccount,
   startTelegramLink,
   unlinkTelegramAccount,
+  type TelegramAccount,
 } from '@/lib/api/endpoints/telegram';
 import { qk } from '@/services/queryKeys';
 
@@ -33,6 +34,12 @@ export function useDisconnectTelegram() {
     mutationFn: () => unlinkTelegramAccount(),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.telegramAccount }),
   });
+}
+
+// An account is connected through the instance bot. A connected one stays without it: the
+// bot of a team can still write to it.
+export function telegramOffered(account: TelegramAccount): boolean {
+  return account.botUsername !== null || account.link !== null;
 }
 
 // How to name a connected account: the @username when Telegram has one, otherwise

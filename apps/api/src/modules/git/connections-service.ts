@@ -33,6 +33,7 @@ import {
   type ProviderPullRequestDetails,
   type ProviderPullRequestPage,
   type ProviderRepository,
+  type ProviderRepositoryPage,
 } from './connections-provider';
 import { assertProjectColumn, getOrCreateGitSettings, type GitSettings } from './service';
 import { assertIssueLabels, assertIssueType } from '#modules/issues/service';
@@ -74,6 +75,71 @@ export interface DevelopmentRepositoryDto {
   baseUrl: string;
   fullName: string;
   webUrl: string;
+}
+
+// A repository a token reaches, with the projects that sync with it.
+export interface ReachableRepositoryDto {
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  projects: { id: number; name: string }[];
+}
+
+export interface ReachableRepositoryPageDto {
+  repositories: ReachableRepositoryDto[];
+  nextPage: number | null;
+}
+
+// A repository and one project that syncs with it.
+export const syncedRepositoryColumns = {
+  externalId: gitManagedRepository.externalId,
+  fullName: gitManagedRepository.fullName,
+  webUrl: gitManagedRepository.webUrl,
+  projectId: project.id,
+  projectName: project.name,
+};
+
+interface SyncedRepositoryRow {
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  projectId: number;
+  projectName: string;
+}
+
+export function groupSyncedRepositories(rows: SyncedRepositoryRow[]): ReachableRepositoryDto[] {
+  const repositories = new Map<string, ReachableRepositoryDto>();
+  for (const { externalId, fullName, webUrl, projectId, projectName } of rows) {
+    const repository = repositories.get(externalId) ?? {
+      externalId,
+      fullName,
+      webUrl,
+      projects: [],
+    };
+    repository.projects.push({ id: projectId, name: projectName });
+    repositories.set(externalId, repository);
+  }
+  return [...repositories.values()];
+}
+
+// Puts beside each repository of the host's page the projects of `rows` that sync with it,
+// matched by the repository's id on the host.
+export function withSyncedProjects(
+  page: ProviderRepositoryPage,
+  rows: SyncedRepositoryRow[],
+): ReachableRepositoryPageDto {
+  const projects = new Map(
+    groupSyncedRepositories(rows).map((repository) => [repository.externalId, repository.projects]),
+  );
+  return {
+    repositories: page.repositories.map(({ externalId, fullName, webUrl }) => ({
+      externalId,
+      fullName,
+      webUrl,
+      projects: projects.get(externalId) ?? [],
+    })),
+    nextPage: page.nextPage,
+  };
 }
 
 interface ConnectionSecret {
@@ -489,6 +555,53 @@ export async function listAvailableRepositories(
     })),
     nextPage: result.nextPage,
   };
+}
+
+// The team's projects that sync with a repository through a connection, for every
+// repository or for those among `externalIds`.
+function connectionSyncedRows(connectionId: number, externalIds?: string[]) {
+  return db
+    .select(syncedRepositoryColumns)
+    .from(gitManagedRepository)
+    .innerJoin(project, eq(project.id, gitManagedRepository.projectId))
+    .where(
+      and(
+        eq(gitManagedRepository.connectionId, connectionId),
+        externalIds && inArray(gitManagedRepository.externalId, externalIds),
+      ),
+    )
+    .orderBy(asc(gitManagedRepository.fullName), asc(project.name));
+}
+
+// The repositories the team's projects sync with through a connection, read without
+// asking the host.
+export async function listConnectionSyncedRepositories(
+  teamId: number,
+  connectionId: number,
+): Promise<ReachableRepositoryDto[]> {
+  const [connection] = await db
+    .select({ id: gitProviderConnection.id })
+    .from(gitProviderConnection)
+    .where(
+      and(eq(gitProviderConnection.id, connectionId), eq(gitProviderConnection.teamId, teamId)),
+    )
+    .limit(1);
+  if (!connection) throw new HttpError(404, 'Provider connection not found');
+  return groupSyncedRepositories(await connectionSyncedRows(connectionId));
+}
+
+// The repositories whose webhooks a team connection manages, with the team's projects
+// that sync with each.
+export async function listConnectionRepositories(
+  teamId: number,
+  connectionId: number,
+  page: number,
+  search: string,
+): Promise<ReachableRepositoryPageDto> {
+  const connection = await teamConnectionSecret(connectionId, teamId);
+  const result = await listProviderRepositories(providerInput(connection), page, search.trim());
+  const externalIds = result.repositories.map((repository) => repository.externalId);
+  return withSyncedProjects(result, await connectionSyncedRows(connectionId, externalIds));
 }
 
 export async function connectRepositories(

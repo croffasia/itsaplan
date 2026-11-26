@@ -4,10 +4,10 @@ import { useTranslations } from 'next-intl';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { EMPTY_FILTER_SET, type FilterCondition, type FilterSet } from '@/utils/filters';
-import type { FieldSpec } from '@/utils/filterFields';
-import { newCondition, useFilterFields } from '@/hooks/useFilterFields';
+import { useFilterFields } from '@/hooks/useFilterFields';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import FilterCommandMenu from '@/components/layout/FilterCommandMenu';
 import FilterConditionPill from '@/components/layout/FilterConditionPill';
 
 // The row of filter condition pills, an add-condition button and a button that
@@ -28,7 +28,6 @@ export default function FilterBar({
   const tCommon = useTranslations('common');
   const { fieldSpecs } = useFilterFields(project.project.ref);
   const [addOpen, setAddOpen] = useState(false);
-  const specs = fieldSpecs(project, customFields);
   // The pills read a catalog that also carries the fields only the current
   // conditions still name, so a condition on a switched-off section stays visible
   // and removable while the add menu no longer offers it.
@@ -39,11 +38,6 @@ export default function FilterBar({
 
   const remove = (id: string) =>
     onChange({ conditions: filters.conditions.filter((c) => c.id !== id) });
-
-  const add = (spec: FieldSpec) => {
-    onChange({ conditions: [...filters.conditions, newCondition(spec)] });
-    setAddOpen(false);
-  };
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -69,17 +63,14 @@ export default function FilterBar({
             <Plus className="size-3.5" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="max-h-80 w-52 overflow-auto p-1">
-          {specs.map((spec) => (
-            <button
-              key={spec.field}
-              type="button"
-              onClick={() => add(spec)}
-              className="w-full truncate rounded px-2 py-1 text-start text-sm hover:bg-accent"
-            >
-              {spec.label}
-            </button>
-          ))}
+        <PopoverContent align="start" className="w-72 p-0">
+          <FilterCommandMenu
+            filters={filters}
+            onChange={onChange}
+            project={project}
+            customFields={customFields}
+            onClose={() => setAddOpen(false)}
+          />
         </PopoverContent>
       </Popover>
 

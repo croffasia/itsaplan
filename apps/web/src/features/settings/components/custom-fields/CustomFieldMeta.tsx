@@ -1,7 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
-import { FIELD_TYPE_ICONS, useFieldTypeLabel } from '../../utils/fieldTypes';
+import { FIELD_TYPE_ICONS } from '@/components/common/fields/fieldTypeIcons';
+import { useFieldTypeLabel } from '../../utils/fieldTypes';
 
 // What a field is, at the end of its row: its type, then what that type lets the field
 // hold — the options of a select, or the people a member field is narrowed to.

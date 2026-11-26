@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Pilih semua issue di papan"
+      },
+      "filter": {
+        "open": "Buka menu filter"
       }
     },
     "conflict": "Juga digunakan oleh {command}. Ubah salah satunya."

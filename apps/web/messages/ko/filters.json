@@ -4,6 +4,10 @@
   "valuePlaceholder": "값",
   "noOptions": "선택할 수 있는 항목이 없습니다",
   "selected": "{count}개 선택됨",
+  "me": "나",
+  "isAnyOf": "다음 중 하나",
+  "menuPlaceholder": "필터…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "일치",
     "is_not": "일치하지 않음",

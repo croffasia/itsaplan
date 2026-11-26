@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Sélectionner tous les tickets du tableau"
+      },
+      "filter": {
+        "open": "Ouvrir le menu des filtres"
       }
     },
     "conflict": "Également utilisé par {command}. Modifiez l'un des deux."

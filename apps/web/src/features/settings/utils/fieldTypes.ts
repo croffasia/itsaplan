@@ -1,17 +1,3 @@
-import {
-  AlignLeft,
-  Calendar,
-  CalendarClock,
-  CalendarRange,
-  CircleCheck,
-  Hash,
-  Link as LinkIcon,
-  List,
-  ListChecks,
-  Type,
-  UserRound,
-  type LucideIcon,
-} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { CustomFieldType, MemberScope } from '@/lib/api/endpoints/customFields';
 
@@ -30,20 +16,6 @@ export const FIELD_TYPES: CustomFieldType[] = [
   'multi_select',
   'member',
 ];
-
-export const FIELD_TYPE_ICONS: Record<CustomFieldType, LucideIcon> = {
-  text: Type,
-  markdown: AlignLeft,
-  url: LinkIcon,
-  number: Hash,
-  boolean: CircleCheck,
-  date: Calendar,
-  datetime: CalendarClock,
-  datetime_range: CalendarRange,
-  select: List,
-  multi_select: ListChecks,
-  member: UserRound,
-};
 
 // Who a member field may hold, in the order the picker shows them.
 export const MEMBER_SCOPES: MemberScope[] = ['all', 'humans', 'agents'];

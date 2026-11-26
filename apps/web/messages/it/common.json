@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Seleziona tutte le issue sulla board"
+      },
+      "filter": {
+        "open": "Apri il menu dei filtri"
       }
     },
     "conflict": "Usata anche da {command}. Modifica una delle due."

@@ -29,6 +29,7 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import AppHeader from '@/components/layout/AppHeader';
 import CommandLayer from '@/components/layout/CommandLayer';
 import DesktopNotificationsPrompt from '@/components/layout/DesktopNotificationsPrompt';
+import { OPEN_FILTER_MENU_EVENT } from '@/components/layout/FilterMenuButton';
 import ShellBody from '@/components/layout/ShellBody';
 import ShellHeaderTitle from '@/components/layout/ShellHeaderTitle';
 import ShellOverlays from '@/components/layout/ShellOverlays';
@@ -145,6 +146,7 @@ export default function Shell({
 
   useKeyboardShortcuts({
     hasProject: !!project,
+    onBoard: route.onBoard,
     hasAgents,
     overlayOpen: overlays.anyOpen,
     onToggleCommand: () => overlays.setShowCommand((v) => !v),
@@ -155,6 +157,7 @@ export default function Shell({
     onSettings: () => firstSettingsHref && router.push(firstSettingsHref),
     onToggleChat: () => togglePanel('chat'),
     onToggleRuns: () => togglePanel('runs'),
+    onOpenFilter: () => window.dispatchEvent(new Event(OPEN_FILTER_MENU_EVENT)),
   });
 
   // Every view opens an issue through this one callback, so the user's choice

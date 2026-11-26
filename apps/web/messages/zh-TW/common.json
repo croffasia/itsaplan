@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "選擇看板中的所有工作項目"
+      },
+      "filter": {
+        "open": "開啟篩選選單"
       }
     },
     "conflict": "「{command}」也在使用。請更改其中一個。"

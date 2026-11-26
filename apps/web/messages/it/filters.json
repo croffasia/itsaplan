@@ -4,6 +4,10 @@
   "valuePlaceholder": "valore",
   "noOptions": "Nessuna opzione",
   "selected": "{count} selezionati",
+  "me": "Io",
+  "isAnyOf": "è uno tra",
+  "menuPlaceholder": "Filtra…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "è",
     "is_not": "non è",

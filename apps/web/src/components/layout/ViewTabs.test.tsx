@@ -100,7 +100,7 @@ async function render(activeViewId: number, shell = reader) {
               onShow={(v) => shown.push(v)}
               onResetRow={() => {}}
               onPinProjectOrder={() => {}}
-              onToggleFilter={() => {}}
+              filterControl={null}
               displayControl={null}
             />
           </ShellCtx.Provider>

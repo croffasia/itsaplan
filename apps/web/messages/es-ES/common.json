@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Seleccionar todos los tickets del tablero"
+      },
+      "filter": {
+        "open": "Abrir el menú de filtros"
       }
     },
     "conflict": "{command} también usa esta combinación. Cambia una de las dos."

@@ -4,6 +4,10 @@
   "valuePlaceholder": "nilai",
   "noOptions": "Tidak ada opsi",
   "selected": "{count} dipilih",
+  "me": "Saya",
+  "isAnyOf": "salah satu dari",
+  "menuPlaceholder": "Filter…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "adalah",
     "is_not": "bukan",

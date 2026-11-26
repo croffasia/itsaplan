@@ -4,6 +4,10 @@
   "valuePlaceholder": "قيمة",
   "noOptions": "لا توجد خيارات",
   "selected": "{count} محدَّد",
+  "me": "أنا",
+  "isAnyOf": "يساوي أيًّا من",
+  "menuPlaceholder": "تصفية…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "يساوي",
     "is_not": "لا يساوي",

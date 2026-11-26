@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select';
 import FilterValueEditor from '@/components/layout/FilterValueEditor';
 
-// One condition in the filter bar: the field label, its operator, the value
-// editor for its kind, and a remove button.
+// One condition in the filter bar, as a chip of parts: the field's icon and name,
+// the operator, the values, and a remove button.
 export default function FilterConditionPill({
   spec,
   cond,
@@ -31,21 +31,26 @@ export default function FilterConditionPill({
   onRemove: () => void;
 }) {
   const t = useTranslations('filters');
+  const tCommon = useTranslations('common');
   const { operatorLabel } = useFilterFields();
+  const opLabel = (op: FilterOperator) => operatorLabel(op, cond.values.length);
   return (
-    <div className="flex items-center gap-1 rounded-md border bg-muted/60 py-0.5 ps-2 pe-0.5 text-xs">
-      <span className="font-medium text-foreground">{spec.label}</span>
+    <div className="flex h-7 max-w-full items-stretch rounded-md bg-muted text-sm">
+      <span className="flex shrink-0 items-center gap-1.5 ps-2 pe-2 font-medium text-foreground [&_svg]:size-3.5 [&_svg]:text-muted-foreground">
+        {spec.icon}
+        {spec.label}
+      </span>
       <Select value={cond.op} onValueChange={(v) => onOperatorChange(v as FilterOperator)}>
         <SelectTrigger
           size="sm"
-          className="h-6 gap-1 border-0 bg-transparent px-1 text-muted-foreground shadow-none"
+          className="gap-1 rounded-none border-0 border-s border-background bg-transparent px-2 py-0 text-sm text-muted-foreground shadow-none hover:bg-accent focus-visible:ring-inset data-[size=sm]:h-auto dark:bg-transparent dark:hover:bg-accent [&_svg]:hidden"
         >
-          <SelectValue />
+          <SelectValue>{opLabel(cond.op)}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {OPERATORS_BY_KIND[spec.kind].map((op) => (
             <SelectItem key={op} value={op}>
-              {operatorLabel(op)}
+              {opLabel(op)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -55,7 +60,8 @@ export default function FilterConditionPill({
         type="button"
         onClick={onRemove}
         title={t('remove')}
-        className="rounded p-0.5 hover:bg-accent"
+        aria-label={tCommon('removeFilter', { filter: spec.label })}
+        className="flex items-center rounded-e-md border-s border-background px-1.5 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:outline-none"
       >
         <X className="size-3.5" />
       </button>

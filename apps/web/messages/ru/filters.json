@@ -4,6 +4,10 @@
   "valuePlaceholder": "значение",
   "noOptions": "Нет вариантов",
   "selected": "Выбрано: {count}",
+  "me": "Я",
+  "isAnyOf": "равно одному из",
+  "menuPlaceholder": "Фильтр…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "равно",
     "is_not": "не равно",

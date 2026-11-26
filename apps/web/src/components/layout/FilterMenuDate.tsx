@@ -28,10 +28,12 @@ export default function FilterMenuDate({
         {spec.icon}
         {spec.label} {operatorLabel(OPERATORS_BY_KIND[spec.kind][0])}
       </p>
+      {/* Fills the menu's width: at its own size it leaves a gap at the end. */}
       <Calendar
         mode="single"
         fixedWeeks
         autoFocus
+        className="w-full"
         onSelect={(day) => day && onAdd(toDateStr(day))}
       />
     </div>

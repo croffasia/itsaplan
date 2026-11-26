@@ -276,14 +276,19 @@ export async function getProviderProfile(input: ProviderConnectionInput): Promis
   };
 }
 
+// A GitHub, Gitea or Forgejo repository whose webhooks the token manages.
 export function githubRepository(value: unknown): ProviderRepository | null {
+  if (!bool(record(record(value)?.permissions)?.admin)) return null;
+  return readableRepository(value);
+}
+
+// A GitHub, Gitea or Forgejo repository the token reaches, whatever its rights there.
+function readableRepository(value: unknown): ProviderRepository | null {
   const row = record(value);
   const id = row?.id;
   const fullName = text(row?.full_name);
   const webUrl = httpUrl(row?.html_url);
-  const permissions = record(row?.permissions);
   if ((typeof id !== 'number' && typeof id !== 'string') || !fullName || !webUrl) return null;
-  if (!bool(permissions?.admin)) return null;
   const defaultBranch = text(row?.default_branch);
   return {
     externalId: String(id),
@@ -379,10 +384,14 @@ async function listBitbucketRepositories(
   };
 }
 
+// `reach` picks the repositories: `admin` those whose webhooks the token manages, `any`
+// every one it can read. Bitbucket is listed only by `admin`: no account of a member
+// is on Bitbucket.
 export async function listProviderRepositories(
   input: ProviderConnectionInput,
   page: number,
   search: string,
+  reach: 'admin' | 'any' = 'admin',
 ): Promise<ProviderRepositoryPage> {
   const perPage = 30;
   if (input.provider === 'bitbucket')
@@ -391,7 +400,8 @@ export async function listProviderRepositories(
   if (input.provider === 'gitlab') {
     params.set('per_page', String(perPage));
     params.set('membership', 'true');
-    params.set('min_access_level', '40');
+    // 40 is Maintainer, the least that manages webhooks; 10 is Guest.
+    params.set('min_access_level', reach === 'admin' ? '40' : '10');
     params.set('simple', 'true');
     params.set('order_by', 'last_activity_at');
     params.set('sort', 'desc');
@@ -411,12 +421,8 @@ export async function listProviderRepositories(
   const body = responseBody;
   if (!Array.isArray(body))
     throw new HttpError(502, `${input.provider} returned an invalid repository list`);
-  const map =
-    input.provider === 'github'
-      ? githubRepository
-      : input.provider === 'gitlab'
-        ? gitlabRepository
-        : giteaRepository;
+  let map = gitlabRepository;
+  if (input.provider !== 'gitlab') map = reach === 'admin' ? githubRepository : readableRepository;
   let repositories = body.map(map).filter((repo): repo is ProviderRepository => repo !== null);
   if (
     (input.provider === 'github' || input.provider === 'gitea' || input.provider === 'forgejo') &&

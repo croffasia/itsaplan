@@ -1,18 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import BrandCardPage from '@/components/common/page/BrandCardPage';
 import { Button } from '@/components/ui/button';
-import { accountPath } from '@/utils/accountSections';
 import { useCompleteSlackLink } from './services/slack.service';
+import { slackReturnPath } from './utils/slackReturn';
 
 // Where Slack sends a user back after Sign in with Slack (/slack/connect). It hands the
-// code to the api and returns the user to their notification settings.
+// code to the api and returns the user to the account page they started on.
 export default function AccountSlackConnectPage() {
   const t = useTranslations('account.notifications');
   const router = useRouter();
@@ -32,7 +31,7 @@ export default function AccountSlackConnectPage() {
       {
         onSuccess: () => {
           toast.success(t('slackConnectedToast'));
-          router.replace(accountPath('notifications'));
+          router.replace(slackReturnPath());
         },
       },
     );
@@ -52,8 +51,8 @@ export default function AccountSlackConnectPage() {
         {failed && (
           <>
             <p className="text-sm text-balance text-muted-foreground">{message}</p>
-            <Button asChild variant="ghost">
-              <Link href={accountPath('notifications')}>{t('slackBack')}</Link>
+            <Button variant="ghost" onClick={() => router.replace(slackReturnPath())}>
+              {t('slackBack')}
             </Button>
           </>
         )}

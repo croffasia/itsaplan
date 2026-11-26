@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { signOut, useSession } from '@/lib/auth-client';
-import { accountPath, ACCOUNT_SECTIONS } from '@/utils/accountSections';
+import { accountPath, ACCOUNT_SECTION_GROUPS } from '@/utils/accountSections';
 import { useAccountSectionLabel } from '@/hooks/useSectionLabels';
 import Avatar from '@/components/common/Avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -62,14 +63,20 @@ export default function UserMenu() {
           <span className="truncate text-sm font-medium">{user.email}</span>
           <span className="text-xs text-muted-foreground capitalize">{t('role', { role })}</span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {ACCOUNT_SECTIONS.map(({ slug, icon: Icon }) => (
-          <DropdownMenuItem key={slug} asChild>
-            <Link href={accountPath(slug)}>
-              <Icon />
-              {sectionLabel(slug)}
-            </Link>
-          </DropdownMenuItem>
+        {ACCOUNT_SECTION_GROUPS.map((group) => (
+          <Fragment key={group[0].slug}>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {group.map(({ slug, icon: Icon }) => (
+                <DropdownMenuItem key={slug} asChild>
+                  <Link href={accountPath(slug)}>
+                    <Icon />
+                    {sectionLabel(slug)}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </Fragment>
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onSignOut}>

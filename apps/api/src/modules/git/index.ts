@@ -16,6 +16,8 @@ import {
   GitAccountResponse,
   GitSettingsResponse,
   ImportRepositoryIssuesResponse,
+  ReachableGitRepositoryPageResponse,
+  ReachableGitRepositoryResponse,
   RepositoryMappingResponse,
   availableRepositoriesQuery,
   connectRepositoriesBody,
@@ -38,6 +40,8 @@ import {
   disconnectRepository,
   getRepositoryMapping,
   listAvailableRepositories,
+  listConnectionRepositories,
+  listConnectionSyncedRepositories,
   listDevelopmentRepositories,
   listGitProviderConnections,
   listTeamGitProviderConnections,
@@ -49,6 +53,8 @@ import {
   checkGitAccount,
   connectGitAccount,
   disconnectGitAccount,
+  listAccountRepositories,
+  listAccountSyncedRepositories,
   listGitAccounts,
 } from './accounts';
 
@@ -79,6 +85,41 @@ export const gitSettingsRoutes = new Elysia({
       body: createGitProviderConnectionBody,
       response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
       detail: { summary: 'Connect or rotate a team Git provider account' },
+    },
+  )
+  .get(
+    '/teams/:teamId/settings/git/connections/:connectionId/synced-repositories',
+    ({ membership, params }) =>
+      listConnectionSyncedRepositories(membership.teamId, params.connectionId),
+    {
+      teamManager: true,
+      params: teamGitProviderConnectionParams,
+      response: { 200: t.Array(ReachableGitRepositoryResponse), ...commonErrors },
+      detail: {
+        summary: "List repositories a team Git provider account syncs with the team's projects",
+      },
+    },
+  )
+  .get(
+    '/teams/:teamId/settings/git/connections/:connectionId/repositories',
+    ({ membership, params, query }) =>
+      listConnectionRepositories(
+        membership.teamId,
+        params.connectionId,
+        query.page ?? 1,
+        query.search ?? '',
+      ),
+    {
+      teamManager: true,
+      params: teamGitProviderConnectionParams,
+      query: availableRepositoriesQuery,
+      response: { 200: ReachableGitRepositoryPageResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'List repositories a team Git provider account manages',
+        description:
+          'Ask the host for the repositories whose webhooks the account manages, with the ' +
+          "team's projects that sync with each.",
+      },
     },
   )
   .delete(
@@ -307,6 +348,51 @@ export const gitAccountRoutes = new Elysia({
       detail: {
         summary: 'Connect a repository host account',
         description: 'Store the token of an account on the host; it replaces the one there.',
+      },
+    },
+  )
+  .get(
+    '/account/git-accounts/:accountId/synced-repositories',
+    async ({ user, params }) => {
+      const repositories = await listAccountSyncedRepositories(
+        requireUser(user).id,
+        params.accountId,
+      );
+      if (!repositories) throw new HttpError(404, 'Account not connected');
+      return repositories;
+    },
+    {
+      params: gitAccountParams,
+      response: { 200: t.Array(ReachableGitRepositoryResponse), ...commonErrors },
+      detail: {
+        summary: "List repositories the current user's projects sync with on an account's host",
+        description:
+          'List the repositories on the account host that projects of the current user sync ' +
+          'with, without asking the host.',
+      },
+    },
+  )
+  .get(
+    '/account/git-accounts/:accountId/repositories',
+    async ({ user, params, query }) => {
+      const page = await listAccountRepositories(
+        requireUser(user).id,
+        params.accountId,
+        query.page ?? 1,
+        query.search ?? '',
+      );
+      if (!page) throw new HttpError(404, 'Account not connected');
+      return page;
+    },
+    {
+      params: gitAccountParams,
+      query: availableRepositoriesQuery,
+      response: { 200: ReachableGitRepositoryPageResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'List repositories a repository host account reaches',
+        description:
+          'Ask the host for every repository the account can read, with the projects of the ' +
+          'current user that sync with each.',
       },
     },
   )

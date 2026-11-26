@@ -5,7 +5,7 @@ import {
   listTeamGitProviderConnections,
 } from '@/lib/api/endpoints/git';
 
-const teamConnectionsKey = (teamId: number) => ['teamGitConnections', teamId] as const;
+export const teamConnectionsKey = (teamId: number) => ['teamGitConnections', teamId] as const;
 
 export function useTeamGitProviderConnectionsQuery(teamId: number) {
   return useQuery({

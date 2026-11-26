@@ -36,15 +36,19 @@ export interface GitAccountCheck {
   avatarUrl: string | null;
 }
 
-// The account a token signs in as, without storing anything.
-export async function checkGitAccount(input: GitAccountInput): Promise<GitAccountCheck> {
-  const { provider } = input;
+async function signIn(input: GitAccountInput) {
   const token = input.token.trim();
   if (!token) throw new HttpError(400, 'token is required');
-  const baseUrl = await normalizeProviderBaseUrl(provider, input.baseUrl);
-  const profile = await getProviderProfile({ provider, baseUrl, token });
+  const baseUrl = await normalizeProviderBaseUrl(input.provider, input.baseUrl);
+  const profile = await getProviderProfile({ provider: input.provider, baseUrl, token });
+  return { baseUrl, token, profile };
+}
+
+// The account a token signs in as, without storing anything.
+export async function checkGitAccount(input: GitAccountInput): Promise<GitAccountCheck> {
+  const { baseUrl, profile } = await signIn(input);
   return {
-    provider,
+    provider: input.provider,
     baseUrl,
     accountLogin: profile.login,
     accountName: profile.name,
@@ -76,12 +80,13 @@ export async function connectGitAccount(
   userId: string,
   input: GitAccountInput,
 ): Promise<GitAccountDto> {
-  const { provider, baseUrl, accountLogin } = await checkGitAccount(input);
+  const { baseUrl, token, profile } = await signIn(input);
   const values = {
-    provider,
+    provider: input.provider,
     baseUrl,
-    accountLogin,
-    ...encryptSecret(input.token.trim()),
+    accountId: profile.id,
+    accountLogin: profile.login,
+    ...encryptSecret(token),
     updatedAt: new Date(),
   };
   const [row] = await db
@@ -118,13 +123,12 @@ export async function memberAccountInput(
   };
 }
 
-// The project member who connected the account `login` on the host. Null when nobody
-// did, or when several members connected the same account and the comment is no one's
-// alone.
+// The project member who connected the host account `accountId`. Null when nobody did,
+// or when several members connected the same account and the comment is no one's alone.
 export async function memberForAccount(
   projectId: number,
   baseUrl: string,
-  login: string,
+  accountId: string,
 ): Promise<string | null> {
   const rows = await db
     .select({ userId: userGitAccount.userId })
@@ -133,7 +137,7 @@ export async function memberForAccount(
       projectMember,
       and(eq(projectMember.userId, userGitAccount.userId), eq(projectMember.projectId, projectId)),
     )
-    .where(and(eq(userGitAccount.baseUrl, baseUrl), eq(userGitAccount.accountLogin, login)))
+    .where(and(eq(userGitAccount.baseUrl, baseUrl), eq(userGitAccount.accountId, accountId)))
     .limit(2);
   return rows.length === 1 ? rows[0]!.userId : null;
 }

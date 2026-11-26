@@ -68,7 +68,7 @@ function fakeServer(server: Server, { versionStatus }: { versionStatus?: number 
         return Response.json({ version: '11.0.0' }, { status });
       }
       const path = url.pathname.slice(API_PREFIX[server].length);
-      if (path === '/user') return Response.json({ login: 'octo', username: 'octo' });
+      if (path === '/user') return Response.json({ id: 1, login: 'octo', username: 'octo' });
       if (path === '/repositories/1' || path === '/projects/1') {
         return Response.json({
           id: 1,

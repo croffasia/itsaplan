@@ -240,6 +240,9 @@ async function providerRequest(
 }
 
 export interface ProviderProfile {
+  // The account's id on the host. A login can pass to someone else after a rename; the
+  // id cannot.
+  id: string;
   login: string;
   name: string | null;
   avatarUrl: string | null;
@@ -250,17 +253,21 @@ export async function getProviderProfile(input: ProviderConnectionInput): Promis
   const response = await providerRequest(input, '/user');
   const body = record(await response.json());
   if (input.provider === 'bitbucket') {
+    const id = text(body?.uuid);
     const login = text(body?.nickname) ?? text(body?.username) ?? text(body?.display_name);
-    if (!login) throw new HttpError(502, `${input.provider} returned an invalid account`);
+    if (!id || !login) throw new HttpError(502, `${input.provider} returned an invalid account`);
     return {
+      id,
       login,
       name: text(body?.display_name),
       avatarUrl: httpUrl(record(record(body?.links)?.avatar)?.href),
     };
   }
+  const id = numericId(body);
   const login = text(body?.[input.provider === 'gitlab' ? 'username' : 'login']);
-  if (!login) throw new HttpError(502, `${input.provider} returned an invalid account`);
+  if (!id || !login) throw new HttpError(502, `${input.provider} returned an invalid account`);
   return {
+    id,
     login,
     name: text(
       body?.[input.provider === 'gitlab' || input.provider === 'github' ? 'name' : 'full_name'],
@@ -1020,6 +1027,7 @@ export interface ProviderIssueComment {
   id: string;
   body: string;
   author: string | null;
+  authorId: string | null;
 }
 
 function issueCommentsPath(
@@ -1079,8 +1087,13 @@ export async function listProviderIssueComments(
       const id = numericId(row);
       const content = text(row?.body);
       if (!row || !id || !content || row.system === true || row.internal === true) continue;
-      const author = gitlab ? record(row.author)?.username : record(row.user)?.login;
-      comments.push({ id, body: content, author: text(author) });
+      const author = record(gitlab ? row.author : row.user);
+      comments.push({
+        id,
+        body: content,
+        author: text(gitlab ? author?.username : author?.login),
+        authorId: numericId(author),
+      });
     }
     page = paged ? nextPageNumber(response, page, body.length, perPage) : null;
   }

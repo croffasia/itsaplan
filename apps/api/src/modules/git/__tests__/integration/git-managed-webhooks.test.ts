@@ -41,7 +41,7 @@ function fakeProvider(provider: FakeProvider) {
     port: 0,
     async fetch(req) {
       const path = new URL(req.url).pathname.slice(prefix.length);
-      if (path === '/user') return Response.json({ login: 'octo', username: 'octo' });
+      if (path === '/user') return Response.json({ id: 1, login: 'octo', username: 'octo' });
       if (path === '/repositories/1' || path === '/projects/1') {
         return Response.json({
           id: 1,

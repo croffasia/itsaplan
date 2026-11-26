@@ -28,8 +28,8 @@ function fakeGithub() {
   const commentReads: number[] = [];
   // Comments written, edited and deleted on the fake, with the token each call used.
   const commentWrites: { method: string; id: number; body?: string; token: string }[] = [];
-  // The login /user answers for a token; any other token signs in as 'octo'.
-  const logins: Record<string, string> = {};
+  // The account /user answers for a token; any other token signs in as 'octo'.
+  const accounts: Record<string, { id: number; login: string }> = {};
   // Attached files by id: a private one downloads only by the signed address the rendered
   // HTML names, a missing one not at all, and any other one through a redirect.
   const privateFiles = new Set<string>();
@@ -54,7 +54,7 @@ function fakeGithub() {
       const url = new URL(req.url);
       const path = url.pathname.replace(/^\/api\/v3/, '');
       const token = req.headers.get('authorization')?.replace(/^Bearer /, '') ?? '';
-      if (path === '/user') return Response.json({ login: logins[token] ?? 'octo' });
+      if (path === '/user') return Response.json(accounts[token] ?? { id: 1, login: 'octo' });
       const asset = path.match(/^\/user-attachments\/assets\/([0-9a-f-]+)$/);
       if (asset) {
         const id = asset[1]!;
@@ -169,7 +169,7 @@ function fakeGithub() {
     stateChanges,
     commentReads,
     commentWrites,
-    logins,
+    accounts,
     privateFiles,
     missingFiles,
     control,
@@ -659,12 +659,18 @@ describe('Repository issue sync', () => {
 
   describe('comments in two-way sync', () => {
     const repo = { full_name: 'acme/site' };
-    const commentEvent = (action: string, id: number, body: string | null, login = 'reviewer') => ({
+    const ownerGh = { id: 101, login: 'owner-gh' };
+    const commentEvent = (
+      action: string,
+      id: number,
+      body: string | null,
+      user = { id: 2, login: 'reviewer' },
+    ) => ({
       action,
       issue: githubIssue(opened),
-      comment: { id, body, user: { login } },
+      comment: { id, body, user },
       repository: repo,
-      sender: { login },
+      sender: { login: user.login },
     });
 
     async function linkedIssueId(s: Setup) {
@@ -675,7 +681,7 @@ describe('Repository issue sync', () => {
     }
 
     async function connectAccount(s: Setup) {
-      fake.logins['own-token'] = 'owner-gh';
+      fake.accounts['own-token'] = ownerGh;
       const res = await s.asOwner.account['git-accounts'].post({
         provider: 'github',
         baseUrl: fake.baseUrl,
@@ -711,7 +717,7 @@ describe('Repository issue sync', () => {
       });
       // The repository sends it back; it is not copied a second time.
       expect(
-        await deliver(s, 'issue_comment', commentEvent('created', 5000, sent, 'owner-gh')),
+        await deliver(s, 'issue_comment', commentEvent('created', 5000, sent, ownerGh)),
       ).toMatchObject({ handled: 'ignored' });
       expect(await comments(s, issueId)).toMatchObject([
         {
@@ -752,7 +758,7 @@ describe('Repository issue sync', () => {
       const sent = 'Second\n\n<!-- itsaplan -->';
       // The edit comes back from the repository with the text sent and changes nothing.
       expect(
-        await deliver(s, 'issue_comment', commentEvent('edited', 5000, sent, 'owner-gh')),
+        await deliver(s, 'issue_comment', commentEvent('edited', 5000, sent, ownerGh)),
       ).toMatchObject({ handled: 'ignored' });
       await s.asOwner.comments({ commentId }).delete();
 
@@ -813,7 +819,7 @@ describe('Repository issue sync', () => {
       const issueId = await linkedIssueId(s);
       await connectAccount(s);
 
-      await deliver(s, 'issue_comment', commentEvent('created', 88, 'Mine', 'owner-gh'));
+      await deliver(s, 'issue_comment', commentEvent('created', 88, 'Mine', ownerGh));
 
       const [comment] = await comments(s, issueId);
       expect(comment).toMatchObject({
@@ -826,12 +832,28 @@ describe('Repository issue sync', () => {
       expect(fake.commentWrites).toEqual([]);
     });
 
+    it('shows a repository comment under its login once the login belongs to another account', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+
+      await deliver(
+        s,
+        'issue_comment',
+        commentEvent('created', 90, 'Not me', { ...ownerGh, id: 999 }),
+      );
+
+      expect(await comments(s, issueId)).toMatchObject([
+        { body: 'Not me', actorUserId: null, actorName: 'owner-gh' },
+      ]);
+    });
+
     it('deletes on the host the replies that go with a deleted comment', async () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
       await connectAccount(s);
       const asMember = await addProjectMember(s.asOwner, 'MKT');
-      fake.logins['member-token'] = 'member-gh';
+      fake.accounts['member-token'] = { id: 102, login: 'member-gh' };
       await asMember.account['git-accounts'].post({
         provider: 'github',
         baseUrl: fake.baseUrl,
@@ -854,7 +876,7 @@ describe('Repository issue sync', () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
       const asMember = await addProjectMember(s.asOwner, 'MKT');
-      fake.logins['member-token'] = 'member-gh';
+      fake.accounts['member-token'] = { id: 102, login: 'member-gh' };
       await asMember.account['git-accounts'].post({
         provider: 'github',
         baseUrl: fake.baseUrl,
@@ -877,14 +899,18 @@ describe('Repository issue sync', () => {
       const s = await setup(fake);
       const issueId = await linkedIssueId(s);
       const outsider = authedApi((await signUpTestUser({ name: 'Outsider' })).cookie);
-      fake.logins['outsider-token'] = 'outsider-gh';
+      fake.accounts['outsider-token'] = { id: 103, login: 'outsider-gh' };
       await outsider.account['git-accounts'].post({
         provider: 'github',
         baseUrl: fake.baseUrl,
         token: 'outsider-token',
       });
 
-      await deliver(s, 'issue_comment', commentEvent('created', 89, 'Hi', 'outsider-gh'));
+      await deliver(
+        s,
+        'issue_comment',
+        commentEvent('created', 89, 'Hi', { id: 103, login: 'outsider-gh' }),
+      );
 
       expect(await comments(s, issueId)).toMatchObject([
         { body: 'Hi', actorUserId: null, actorName: 'outsider-gh', actorSource: 'github' },

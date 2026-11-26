@@ -338,7 +338,7 @@ describe('repository provider events', () => {
           object_kind: 'note',
           object_attributes: { id: 31, noteable_type: 'Issue', note: 'Same here' },
           issue: { iid: 4 },
-          user: { username: 'dev' },
+          user: { id: 12, username: 'dev' },
           project,
         },
         headers,
@@ -350,6 +350,7 @@ describe('repository provider events', () => {
       number: 4,
       body: 'Same here',
       author: 'dev',
+      authorId: '12',
     });
     expect(
       provider.parse(
@@ -368,11 +369,13 @@ describe('repository provider events', () => {
     const headers = { 'x-github-event': 'issue_comment' };
     const provider = detectProvider(headers)!;
     const base = { issue: { number: 7 }, repository: { full_name: 'acme/site' } };
-    const comment = { id: 9, body: 'Edited', user: { login: 'octo' } };
+    const comment = { id: 9, body: 'Edited', user: { id: 5, login: 'octo' } };
     expect(provider.parse({ ...base, action: 'edited', comment }, headers)).toMatchObject({
       action: 'edited',
       id: '9',
       body: 'Edited',
+      author: 'octo',
+      authorId: '5',
     });
     expect(
       provider.parse({ ...base, action: 'deleted', comment: { ...comment, body: null } }, headers),

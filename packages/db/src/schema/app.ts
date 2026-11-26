@@ -1197,6 +1197,9 @@ export const userGitAccount = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     provider: text('provider').notNull(),
     baseUrl: text('base_url').notNull(),
+    // The account's id on the host. A comment there is matched to a member by it: a login
+    // can pass to someone else after a rename.
+    accountId: text('account_id').notNull(),
     accountLogin: text('account_login').notNull(),
     ciphertext: text('ciphertext').notNull(),
     iv: text('iv').notNull(),
@@ -1206,7 +1209,7 @@ export const userGitAccount = pgTable(
   },
   (t) => [
     unique().on(t.userId, t.baseUrl),
-    index('user_git_account_login_idx').on(t.baseUrl, t.accountLogin),
+    index('user_git_account_account_idx').on(t.baseUrl, t.accountId),
   ],
 );
 

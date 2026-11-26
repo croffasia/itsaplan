@@ -124,6 +124,7 @@ export interface IssueCommentEvent {
   // Empty on a deleted comment.
   body: string;
   author: string | null;
+  authorId: string | null;
 }
 
 export type GitEvent =
@@ -211,7 +212,7 @@ interface GithubPayload {
   };
   repository?: { full_name?: string; default_branch?: string; html_url?: string };
   issue?: GithubIssue;
-  comment?: { id?: number; body?: string | null; user?: { login?: string } };
+  comment?: { id?: number; body?: string | null; user?: { id?: number; login?: string } };
   // Gitea and Forgejo send comments on pull requests as issue_comment too.
   is_pull?: boolean;
   sender?: { login?: string };
@@ -307,6 +308,7 @@ function parseGithubIssueComment(payload: unknown): IssueCommentEvent | null {
     id: String(comment.id),
     body: comment.body ?? '',
     author: comment.user?.login ?? null,
+    authorId: comment.user?.id ? String(comment.user.id) : null,
   };
 }
 
@@ -491,7 +493,7 @@ interface GitlabPayload {
   merge_request?: { iid?: number; source_branch?: string };
   issue?: { iid?: number; confidential?: boolean };
   labels?: { title?: string }[];
-  user?: { username?: string };
+  user?: { id?: number; username?: string };
   changes?: {
     draft?: { previous?: boolean; current?: boolean };
     title?: unknown;
@@ -547,6 +549,7 @@ function parseGitlabNote(payload: GitlabPayload): IssueCommentEvent | null {
     id: String(note.id),
     body: note.note,
     author: user?.username ?? null,
+    authorId: user?.id ? String(user.id) : null,
   };
 }
 

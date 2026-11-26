@@ -22,7 +22,7 @@ function fakeGithub() {
           ? { name: 'Ana Gomez', avatar_url: 'https://avatars.example/ana.png' }
           : {};
       return login
-        ? Response.json({ login, ...profile })
+        ? Response.json({ id: login.length, login, ...profile })
         : Response.json({ message: 'Bad credentials' }, { status: 401 });
     },
   });

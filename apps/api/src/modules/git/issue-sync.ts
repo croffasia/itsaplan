@@ -205,8 +205,8 @@ async function copyComment(
     )
     .limit(1);
   if (known) return false;
-  const memberId = comment.author
-    ? await memberForAccount(repository.projectId, repository.baseUrl, comment.author)
+  const memberId = comment.authorId
+    ? await memberForAccount(repository.projectId, repository.baseUrl, comment.authorId)
     : null;
   const author = hostActor(comment.author, origin);
   const body = await copyRepositoryFiles(fromRepositoryText(comment.body), {

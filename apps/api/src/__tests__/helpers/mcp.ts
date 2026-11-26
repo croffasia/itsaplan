@@ -65,6 +65,10 @@ export async function connectMcpClient(
   clientId: string,
   scope = 'openid',
 ): Promise<string> {
+  return (await connectMcpClientTokens(cookie, clientId, scope)).access_token;
+}
+
+export async function connectMcpClientTokens(cookie: string, clientId: string, scope = 'openid') {
   // The consent page receives the signed authorization request and posts it back.
   const consentPage = await authorizeMcpClient(cookie, clientId, scope);
   const consent = await app.handle(
@@ -76,7 +80,21 @@ export async function connectMcpClient(
   );
   const { url } = (await consent.json()) as { url: string };
   const token = await exchangeMcpCode(clientId, new URL(url).searchParams.get('code') ?? '');
-  return ((await token.json()) as { access_token: string }).access_token;
+  return (await token.json()) as { access_token: string; refresh_token?: string };
+}
+
+export function refreshMcpToken(clientId: string, refreshToken: string): Promise<Response> {
+  return app.handle(
+    new Request('http://localhost/api/auth/oauth2/token', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    }),
+  );
 }
 
 export function exchangeMcpCode(clientId: string, code: string): Promise<Response> {

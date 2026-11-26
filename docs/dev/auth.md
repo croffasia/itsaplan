@@ -334,7 +334,8 @@ DPoP-bound token (`cnf` claim), because it takes no proof. Then it reads what a 
   sets `user.active`.
 - A token issued in a session ends with that session, as better-auth's introspection has it.
   Signing out does not disconnect a client: deleting a session sets `session_id` on its refresh
-  tokens to NULL, and a token refreshed after that carries no `sid`.
+  tokens to NULL, and a token refreshed after that carries no `sid`. `hooks.before` deletes an
+  expired session when one of its refresh tokens is used, so that refresh carries no `sid` either.
 - The token's client must still be connected to the account, through the person's consent or a
   refresh token that is neither revoked nor expired. Disconnecting it on the account's Security page
   (`DELETE /account/connected-apps/:clientId`) deletes the consent, the refresh tokens, the

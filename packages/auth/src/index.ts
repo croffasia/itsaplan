@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import {
   TEAM_SLUG_PATTERN,
   createWorkspace,
@@ -7,7 +7,7 @@ import {
   isReservedSlug,
   type DbExecutor,
 } from '@repo/db';
-import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -244,6 +244,28 @@ async function isClientConnected(userId: string, clientId: string): Promise<bool
     )
     .limit(1);
   return Boolean(refresh);
+}
+
+// better-auth refreshes without checking the session, so the new token would carry the `sid` of an
+// expired session, which verifyMcpAccessToken refuses. Deleting it, as better-auth does with an
+// expired session it reads, leaves the refresh token without a session, as signing out does.
+// The token is hashed the way better-auth stores it by default, a base64url SHA-256.
+async function deleteExpiredRefreshSession(refreshToken: string): Promise<void> {
+  const token = createHash('sha256').update(refreshToken).digest('base64url');
+  await db
+    .delete(schema.session)
+    .where(
+      and(
+        lte(schema.session.expiresAt, new Date()),
+        inArray(
+          schema.session.id,
+          db
+            .select({ id: schema.oauthRefreshToken.sessionId })
+            .from(schema.oauthRefreshToken)
+            .where(eq(schema.oauthRefreshToken.token, token)),
+        ),
+      ),
+    );
 }
 
 // An error better-auth cannot hand back to the page that started the flow lands here.
@@ -779,6 +801,14 @@ function createAuth() {
           throw new APIError('FORBIDDEN', {
             message: 'An API key cannot manage the account. Sign in to do this.',
           });
+        }
+
+        if (ctx.path === '/oauth2/token') {
+          const body = ctx.body as { grant_type?: string; refresh_token?: string } | undefined;
+          if (body?.grant_type === 'refresh_token' && body.refresh_token) {
+            await deleteExpiredRefreshSession(body.refresh_token);
+          }
+          return;
         }
 
         // Read here so the two sign-in endpoints, which also go through the

@@ -221,6 +221,7 @@ export default function Shell({
                   route={route}
                   projectName={projectName}
                   issueIdentifier={issueQuery.data?.identifier ?? null}
+                  issueId={issueQuery.data?.id ?? null}
                   issueAncestors={issueQuery.data?.ancestors ?? []}
                 />
               }

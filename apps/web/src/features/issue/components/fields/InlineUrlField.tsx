@@ -29,14 +29,17 @@ export default function InlineUrlField({
   value,
   saveKey,
   onSave,
+  defaultEditing = false,
 }: {
   value: string | null;
   saveKey: string;
   onSave: (v: string | null) => void;
+  // Starts in the input, for a field the person has just added.
+  defaultEditing?: boolean;
 }) {
   const t = useTranslations('issue.fields');
   const tCommon = useTranslations('common');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   const [draft, setDraft] = useState('');
   const [invalid, setInvalid] = useState(false);
   const display = value === '' || value == null ? null : value;

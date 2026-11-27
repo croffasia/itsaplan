@@ -29,12 +29,14 @@
     "timeOverBy": "{time} زيادة",
     "startDate": "تاريخ البدء",
     "dueDate": "تاريخ الاستحقاق",
+    "noDueDate": "لا يوجد تاريخ استحقاق",
     "properties": "الخصائص",
     "groupState": "الحالة",
     "groupPeople": "الأشخاص",
     "groupPlanning": "التخطيط",
     "groupLabels": "الوسوم",
-    "groupCustom": "حقول مخصصة",
+    "groupCustom": "حقول المشروع",
+    "groupSummary": "الملخص",
     "empty": "فارغ",
     "openInNewTab": "فتح في تبويب جديد"
   },
@@ -296,7 +298,10 @@
     "startTime": "وقت البدء",
     "endTime": "وقت الانتهاء",
     "pickOption": "اختار خيار…",
-    "noOption": "من غير اختيار"
+    "noOption": "من غير اختيار",
+    "addField": "إضافة حقل",
+    "findField": "ابحث عن حقل…",
+    "noFields": "لم يُعثر على حقول."
   },
   "editor": {
     "descriptionPlaceholder": "إضافة وصف…"
@@ -450,6 +455,7 @@
     "untitled": "بلا عنوان"
   },
   "archived": "مؤرشفة",
+  "saved": "تم الحفظ",
   "activityHeading": "النشاط",
   "feedTabAll": "الكل",
   "feedTabComments": "التعليقات",
@@ -481,7 +487,6 @@
     "state": "الحالة",
     "type": "النوع",
     "labels": "الوسوم",
-    "labelCount": "{count, plural, zero {لا وسوم} one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}",
     "noMember": "مش متحدد",
     "pickMember": "اختار حد…",
     "noCandidates": "مفيش حد تختاره."

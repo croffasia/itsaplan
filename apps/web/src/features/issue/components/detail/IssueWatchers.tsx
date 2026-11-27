@@ -1,4 +1,4 @@
-import { Check, Eye, EyeOff, LoaderCircle, UserPlus } from 'lucide-react';
+import { Check, Eye, EyeOff, LoaderCircle } from 'lucide-react';
 import { useIsMutating } from '@tanstack/react-query';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import type { IssueWatcher } from '@/lib/api/endpoints/issues';
@@ -6,7 +6,6 @@ import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
@@ -24,7 +23,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 // Who follows the issue. Everyone can subscribe themselves; members who may edit
-// the issue can also curate the watcher list from the avatar-stack picker.
+// the issue also curate the watcher list from the same pill.
 export default function IssueWatchers({
   issueId,
   watchers,
@@ -74,94 +73,100 @@ export default function IssueWatchers({
     </span>
   );
 
+  const watchLabel = watching ? t('unwatch') : t('watch');
+  const toggleSelf = () => setWatching.mutate({ watching: !watching });
+
+  if (!canManage) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Both the label and the icon name the action the click performs, not the
+            current state: the crossed-out eye goes with Unwatch. The state is what
+            the stack of watchers next to it shows. */}
+        <Pill active={watching} disabled={!currentUserId || writePending} onClick={toggleSelf}>
+          {watching ? <EyeOff /> : <Eye />}
+          {watchLabel}
+        </Pill>
+        {watchers.length > 0 ? (
+          <span
+            className="flex h-7 items-center px-1"
+            role="group"
+            aria-label={t('watchingCount', { count: watchers.length })}
+          >
+            {watcherStack}
+            <span className="sr-only">{watchers.map((watcher) => watcher.name).join(', ')}</span>
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {t('watchingCount', { count: watchers.length })}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // One pill for everything about watching: it shows who watches, and its list starts
+  // with the person's own Watch or Unwatch, then the members to add or remove.
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {/* Both the label and the icon name the action the click performs, not the
-          current state: the crossed-out eye goes with Unwatch. The state is what
-          the stack of watchers next to it shows. */}
-      <Pill
-        active={watching}
-        disabled={!currentUserId || writePending}
-        onClick={() => setWatching.mutate({ watching: !watching })}
-      >
-        {watching ? <EyeOff /> : <Eye />}
-        {watching ? t('unwatch') : t('watch')}
-      </Pill>
-      {canManage ? (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 min-w-7 gap-1 px-1.5 hover:bg-muted"
-              aria-label={t('manage')}
-              title={t('manage')}
-            >
-              {watcherStack}
-              {writePending ? (
-                <LoaderCircle className="size-3.5 animate-spin text-muted-foreground" />
-              ) : (
-                <UserPlus className="size-3.5 text-muted-foreground" />
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-0">
-            <Command>
-              <CommandInput aria-label={t('search')} placeholder={t('search')} />
-              <CommandList>
-                <CommandEmpty>{t('empty')}</CommandEmpty>
-                <CommandGroup heading={t('manage')}>
-                  {members.map((member) => {
-                    const selected = watcherIds.has(member.userId);
-                    return (
-                      <CommandItem
-                        key={member.userId}
-                        value={`${member.name} ${member.email}`}
-                        aria-label={
-                          selected
-                            ? t('remove', { name: `${member.name} (${member.email})` })
-                            : t('add', { name: `${member.name} (${member.email})` })
-                        }
-                        disabled={writePending}
-                        onSelect={() => toggleWatcher(member.userId)}
-                      >
-                        <Avatar name={member.name} image={member.image} className="size-6" />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate" dir="auto">
-                            {member.name}
-                          </span>
-                          <span className="truncate text-xs text-muted-foreground" dir="ltr">
-                            {member.email}
-                          </span>
-                        </span>
-                        {setWatcher.isPending && setWatcher.variables?.userId === member.userId ? (
-                          <LoaderCircle className="animate-spin" />
-                        ) : (
-                          <Check className={selected ? 'opacity-100' : 'opacity-0'} />
-                        )}
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      ) : watchers.length > 0 ? (
-        <span
-          className="flex h-7 items-center px-1"
-          role="group"
-          aria-label={t('watchingCount', { count: watchers.length })}
-        >
+    <Popover>
+      <PopoverTrigger asChild>
+        <Pill active={watching} title={t('manage')}>
+          <Eye />
           {watcherStack}
-          <span className="sr-only">{watchers.map((watcher) => watcher.name).join(', ')}</span>
-        </span>
-      ) : (
-        <span className="text-xs text-muted-foreground">
-          {t('watchingCount', { count: watchers.length })}
-        </span>
-      )}
-    </div>
+          <span className="truncate">
+            {watchers.length > 0 ? t('watchingCount', { count: watchers.length }) : t('watch')}
+          </span>
+          {writePending && <LoaderCircle className="animate-spin text-muted-foreground" />}
+        </Pill>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 p-0">
+        <Command>
+          <CommandInput aria-label={t('search')} placeholder={t('search')} />
+          <CommandList>
+            <CommandEmpty>{t('empty')}</CommandEmpty>
+            {currentUserId && (
+              <CommandGroup>
+                <CommandItem value={watchLabel} disabled={writePending} onSelect={toggleSelf}>
+                  {watching ? <EyeOff /> : <Eye />}
+                  {watchLabel}
+                </CommandItem>
+              </CommandGroup>
+            )}
+            <CommandGroup heading={t('manage')}>
+              {members.map((member) => {
+                const selected = watcherIds.has(member.userId);
+                return (
+                  <CommandItem
+                    key={member.userId}
+                    value={`${member.name} ${member.email}`}
+                    aria-label={
+                      selected
+                        ? t('remove', { name: `${member.name} (${member.email})` })
+                        : t('add', { name: `${member.name} (${member.email})` })
+                    }
+                    disabled={writePending}
+                    onSelect={() => toggleWatcher(member.userId)}
+                  >
+                    <Avatar name={member.name} image={member.image} className="size-6" />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate" dir="auto">
+                        {member.name}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground" dir="ltr">
+                        {member.email}
+                      </span>
+                    </span>
+                    {setWatcher.isPending && setWatcher.variables?.userId === member.userId ? (
+                      <LoaderCircle className="animate-spin" />
+                    ) : (
+                      <Check className={selected ? 'opacity-100' : 'opacity-0'} />
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

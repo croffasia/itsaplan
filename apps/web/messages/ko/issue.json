@@ -29,12 +29,14 @@
     "timeOverBy": "{time} 초과",
     "startDate": "시작일",
     "dueDate": "마감일",
+    "noDueDate": "마감일 없음",
     "properties": "속성",
     "groupState": "상태",
     "groupPeople": "사용자",
     "groupPlanning": "계획",
     "groupLabels": "라벨",
-    "groupCustom": "사용자 지정 필드",
+    "groupCustom": "프로젝트 필드",
+    "groupSummary": "요약",
     "empty": "비어 있음",
     "openInNewTab": "새 탭에서 열기"
   },
@@ -296,7 +298,10 @@
     "startTime": "시작 시간",
     "endTime": "종료 시간",
     "pickOption": "옵션 선택…",
-    "noOption": "옵션 없음"
+    "noOption": "옵션 없음",
+    "addField": "필드 추가",
+    "findField": "필드 찾기…",
+    "noFields": "필드를 찾을 수 없습니다."
   },
   "editor": {
     "descriptionPlaceholder": "설명 추가…"
@@ -450,6 +455,7 @@
     "untitled": "제목 없음"
   },
   "archived": "보관됨",
+  "saved": "저장됨",
   "activityHeading": "활동",
   "feedTabAll": "전체",
   "feedTabComments": "댓글",
@@ -481,7 +487,6 @@
     "state": "상태",
     "type": "유형",
     "labels": "라벨",
-    "labelCount": "{count, plural, one {라벨 #개} other {라벨 #개}}",
     "noMember": "설정되지 않음",
     "pickMember": "멤버 선택…",
     "noCandidates": "선택할 수 있는 멤버가 없습니다."

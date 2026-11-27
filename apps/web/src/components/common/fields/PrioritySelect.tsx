@@ -11,12 +11,15 @@ export default function PrioritySelect({
   onChange,
   readOnly,
   trigger,
+  placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
   readOnly?: boolean;
   // Replaces the pill where a caller needs its own (a Timeline cell).
   trigger?: ReactNode;
+  // Shown when no priority is set, in place of the field's name.
+  placeholder?: string;
 }) {
   const t = useTranslations('common.priority');
   const priorityLabel = usePriorityLabel();
@@ -28,7 +31,9 @@ export default function PrioritySelect({
         trigger ?? (
           <Pill active={!!value}>
             {prio.icon}
-            <span className="truncate">{value ? priorityLabel(value) : t('label')}</span>
+            <span className="truncate">
+              {value ? priorityLabel(value) : (placeholder ?? t('label'))}
+            </span>
           </Pill>
         )
       }

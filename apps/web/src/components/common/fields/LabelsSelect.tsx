@@ -39,8 +39,8 @@ export default function LabelsSelect({
       ) : (
         <Tag />
       )}
-      <span className="truncate">
-        {selected.length > 0 ? t('labelCount', { count: selected.length }) : t('labels')}
+      <span className="truncate" dir="auto">
+        {selected.length > 0 ? selected.map((l) => l.name).join(', ') : t('labels')}
       </span>
     </Pill>
   );

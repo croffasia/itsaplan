@@ -29,12 +29,14 @@
     "timeOverBy": "超出 {time}",
     "startDate": "開始日期",
     "dueDate": "截止日期",
+    "noDueDate": "無截止日期",
     "properties": "屬性",
     "groupState": "狀態",
     "groupPeople": "人員",
     "groupPlanning": "規劃",
     "groupLabels": "標籤",
-    "groupCustom": "自訂欄位",
+    "groupCustom": "專案欄位",
+    "groupSummary": "摘要",
     "empty": "空",
     "openInNewTab": "在新標籤頁中開啟"
   },
@@ -296,7 +298,10 @@
     "startTime": "開始時間",
     "endTime": "結束時間",
     "pickOption": "選擇選項…",
-    "noOption": "無選項"
+    "noOption": "無選項",
+    "addField": "新增欄位",
+    "findField": "尋找欄位…",
+    "noFields": "找不到欄位。"
   },
   "editor": {
     "descriptionPlaceholder": "新增描述…"
@@ -450,6 +455,7 @@
     "untitled": "無標題"
   },
   "archived": "已封存",
+  "saved": "已儲存",
   "activityHeading": "活動記錄",
   "feedTabAll": "全部",
   "feedTabComments": "留言",
@@ -481,7 +487,6 @@
     "state": "狀態",
     "type": "類型",
     "labels": "標籤",
-    "labelCount": "{count, plural, other {# 個標籤}}",
     "noMember": "未設定",
     "pickMember": "選擇…",
     "noCandidates": "沒有可選擇的對象。"

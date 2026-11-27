@@ -23,17 +23,20 @@ export default function EstimatePill({
   value,
   onChange,
   readOnly,
+  defaultEditing = false,
 }: {
   kind: EstimateKind;
   value: number | null;
   onChange: (value: number | null) => void;
   readOnly?: boolean;
+  // Starts in the input, for a field the person has just added.
+  defaultEditing?: boolean;
 }) {
   const t = useTranslations('issue.fields');
   const { icon, format, parse } = KINDS[kind];
   const placeholder = kind === 'points' ? t('estimatePoints') : t('estimateTimePlaceholder');
 
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   const [draft, setDraft] = useState('');
   // Escape leaves the field through blur as well, and the blur must not save.
   const canceled = useRef(false);

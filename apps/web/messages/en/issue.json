@@ -29,12 +29,14 @@
     "timeOverBy": "{time} over",
     "startDate": "Start date",
     "dueDate": "Due date",
+    "noDueDate": "No due date",
     "properties": "Properties",
     "groupState": "State",
     "groupPeople": "People",
     "groupPlanning": "Planning",
     "groupLabels": "Labels",
-    "groupCustom": "Custom fields",
+    "groupCustom": "Project fields",
+    "groupSummary": "Summary",
     "empty": "Empty",
     "openInNewTab": "Open in new tab"
   },
@@ -296,7 +298,10 @@
     "startTime": "Start time",
     "endTime": "End time",
     "pickOption": "Pick an option…",
-    "noOption": "No option"
+    "noOption": "No option",
+    "addField": "Add field",
+    "findField": "Find a field…",
+    "noFields": "No fields found."
   },
   "editor": {
     "descriptionPlaceholder": "Add description…"
@@ -450,6 +455,7 @@
     "untitled": "Untitled"
   },
   "archived": "Archived",
+  "saved": "Saved",
   "activityHeading": "Activity",
   "feedTabAll": "All",
   "feedTabComments": "Comments",
@@ -481,7 +487,6 @@
     "state": "State",
     "type": "Type",
     "labels": "Labels",
-    "labelCount": "{count, plural, one {# label} other {# labels}}",
     "noMember": "Not set",
     "pickMember": "Pick someone…",
     "noCandidates": "Nobody to pick."

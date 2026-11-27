@@ -43,6 +43,7 @@ export default function DateTimePill({
   onChange,
   readOnly,
   trigger,
+  defaultOpen = false,
 }: {
   value: string | null;
   valueEnd: string | null;
@@ -53,10 +54,12 @@ export default function DateTimePill({
   readOnly?: boolean;
   // Replaces the pill where a caller needs its own (a Timeline cell).
   trigger?: ReactNode;
+  // Opens the picker on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('common');
   const tField = useTranslations('issue.customFields');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const id = useId();
   const start = value ? toZonedParts(value) : null;
   const end = valueEnd ? toZonedParts(valueEnd) : null;

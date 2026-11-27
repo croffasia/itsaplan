@@ -29,12 +29,14 @@
     "timeOverBy": "{time} in eccesso",
     "startDate": "Data di inizio",
     "dueDate": "Scadenza",
+    "noDueDate": "Nessuna data di scadenza",
     "properties": "Proprietà",
     "groupState": "Stato",
     "groupPeople": "Persone",
     "groupPlanning": "Pianificazione",
     "groupLabels": "Etichette",
-    "groupCustom": "Campi personalizzati",
+    "groupCustom": "Campi del progetto",
+    "groupSummary": "Riepilogo",
     "empty": "Vuoto",
     "openInNewTab": "Apri in una nuova scheda"
   },
@@ -296,7 +298,10 @@
     "startTime": "Orario di inizio",
     "endTime": "Orario di fine",
     "pickOption": "Scegli un'opzione…",
-    "noOption": "Nessuna opzione"
+    "noOption": "Nessuna opzione",
+    "addField": "Aggiungi campo",
+    "findField": "Cerca un campo…",
+    "noFields": "Nessun campo trovato."
   },
   "editor": {
     "descriptionPlaceholder": "Aggiungi descrizione…"
@@ -450,6 +455,7 @@
     "untitled": "Senza titolo"
   },
   "archived": "Archiviata",
+  "saved": "Salvato",
   "activityHeading": "Attività",
   "feedTabAll": "Tutto",
   "feedTabComments": "Commenti",
@@ -481,7 +487,6 @@
     "state": "Stato",
     "type": "Tipo",
     "labels": "Etichette",
-    "labelCount": "{count, plural, one {# etichetta} other {# etichette}}",
     "noMember": "Non impostato",
     "pickMember": "Scegli qualcuno…",
     "noCandidates": "Nessuno da scegliere."

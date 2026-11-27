@@ -54,6 +54,7 @@ export default function PopoverPick({
   readOnly = false,
   open: openProp,
   onOpenChange,
+  defaultOpen = false,
 }: {
   trigger: ReactNode;
   inputPlaceholder: string;
@@ -75,8 +76,10 @@ export default function PopoverPick({
   // Set both to open the list from outside, for a host that opens it as a step of a flow.
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  // Opens the list on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
-  const [ownOpen, setOwnOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(defaultOpen);
   const open = openProp ?? ownOpen;
   const setOpen = onOpenChange ?? setOwnOpen;
 

@@ -2,26 +2,15 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import type { IssueFieldValueEntry, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { formatDate, formatDateTimeRange } from '@/utils/dates';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import DatePill from '@/components/common/fields/DatePill';
 import DateTimePill from '@/components/common/fields/DateTimePill';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import Avatar from '@/components/common/Avatar';
 import MemberSelect from './MemberSelect';
 import InlineUrlField from './InlineUrlField';
 import InlineTextField from './InlineTextField';
+import IssueCustomFieldOptionsPick from './IssueCustomFieldOptionsPick';
 import { useTranslations } from 'next-intl';
-
-// Radix Select forbids an empty-string item value, so "(none)" options use this
-// sentinel and map back to '' / null on change.
-const NONE = '__none__';
 
 // The editor for one non-markdown custom field on a saved issue, picked by field
 // type. Each change is persisted immediately through onChange. The parallel
@@ -34,6 +23,7 @@ export default function IssueCustomFieldControl({
   saveKey,
   onChange,
   readOnly,
+  defaultOpen,
 }: {
   def: CustomField;
   current: IssueFieldValueEntry | undefined;
@@ -41,6 +31,8 @@ export default function IssueCustomFieldControl({
   saveKey: string;
   onChange: (value: IssueFieldValueInput) => void;
   readOnly?: boolean;
+  // Opens the editor on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('issue.customFields');
   const tFields = useTranslations('issue.fields');
@@ -97,6 +89,7 @@ export default function IssueCustomFieldControl({
         value={(current?.value as string | null) ?? null}
         placeholder={def.name}
         onChange={(userId) => onChange({ value: userId })}
+        defaultOpen={defaultOpen}
       />
     );
   }
@@ -107,6 +100,7 @@ export default function IssueCustomFieldControl({
         value={(current?.value as string | null) ?? null}
         saveKey={saveKey}
         onSave={(v) => onChange({ value: v })}
+        defaultEditing={defaultOpen}
       />
     );
   }
@@ -117,6 +111,7 @@ export default function IssueCustomFieldControl({
         value={(current?.value as string | null) ?? null}
         placeholder={tFields('empty')}
         onChange={(v) => onChange({ value: v })}
+        defaultOpen={defaultOpen}
       />
     );
   }
@@ -129,6 +124,7 @@ export default function IssueCustomFieldControl({
         range={def.fieldType === 'datetime_range'}
         placeholder={tFields('empty')}
         onChange={(value, valueEnd) => onChange({ value, valueEnd })}
+        defaultOpen={defaultOpen}
       />
     );
   }
@@ -140,6 +136,7 @@ export default function IssueCustomFieldControl({
         fieldType={def.fieldType}
         saveKey={saveKey}
         onSave={(v) => onChange({ value: v })}
+        defaultEditing={defaultOpen}
       />
     );
   }
@@ -154,48 +151,13 @@ export default function IssueCustomFieldControl({
     );
   }
 
-  if (def.fieldType === 'select') {
-    return (
-      <Select
-        value={current?.optionIds[0] != null ? String(current.optionIds[0]) : NONE}
-        onValueChange={(v) => onChange({ optionIds: v === NONE ? [] : [Number(v)] })}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={NONE}>(none)</SelectItem>
-          {def.options.map((o) => (
-            <SelectItem key={o.id} value={String(o.id)}>
-              {o.value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  }
-
-  // multi_select
+  // select / multi_select
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {def.options.map((o) => {
-        const selected = current?.optionIds.includes(o.id) ?? false;
-        return (
-          <Button
-            key={o.id}
-            type="button"
-            variant={selected ? 'secondary' : 'outline'}
-            size="sm"
-            className="h-auto rounded-full px-2 py-0.5 text-xs"
-            onClick={() => {
-              const ids = current?.optionIds ?? [];
-              onChange({ optionIds: selected ? ids.filter((x) => x !== o.id) : [...ids, o.id] });
-            }}
-          >
-            {o.value}
-          </Button>
-        );
-      })}
-    </div>
+    <IssueCustomFieldOptionsPick
+      def={def}
+      optionIds={current?.optionIds ?? []}
+      onChange={(optionIds) => onChange({ optionIds })}
+      defaultOpen={defaultOpen}
+    />
   );
 }

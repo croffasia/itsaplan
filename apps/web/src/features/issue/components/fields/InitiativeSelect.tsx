@@ -24,16 +24,19 @@ export default function InitiativeSelect({
   value,
   onChange,
   trigger,
+  defaultOpen = false,
 }: {
   projectKey: string;
   value: number | null;
   onChange: (id: number | null) => void;
   // Replaces the pill where a caller needs its own (a Timeline cell).
   trigger?: ReactNode;
+  // Opens the list on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('initiatives.select');
   const { can } = usePermissions();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState('');
 

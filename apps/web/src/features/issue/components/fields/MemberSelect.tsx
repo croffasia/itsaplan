@@ -28,6 +28,7 @@ export default function MemberSelect({
   onChange,
   placeholder,
   trigger,
+  defaultOpen,
 }: {
   assignees: Assignee[];
   scope: MemberScope;
@@ -36,6 +37,7 @@ export default function MemberSelect({
   placeholder?: string;
   // Replaces the pill where a caller needs its own (a Timeline cell).
   trigger?: ReactNode;
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const none = t('noMember');
@@ -57,6 +59,7 @@ export default function MemberSelect({
           </Pill>
         )
       }
+      defaultOpen={defaultOpen}
       inputPlaceholder={t('pickMember')}
       emptyText={t('noCandidates')}
       items={[

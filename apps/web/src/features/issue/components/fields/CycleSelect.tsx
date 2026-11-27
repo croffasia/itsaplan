@@ -24,15 +24,18 @@ export default function CycleSelect({
   value,
   onChange,
   trigger,
+  defaultOpen = false,
 }: {
   projectKey: string;
   value: CycleRef | null;
   onChange: (cycle: CycleRef | null) => void;
   // Replaces the pill where a caller needs its own (a Timeline cell).
   trigger?: ReactNode;
+  // Opens the list on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('issue.cycleSelect');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   // A caller's own trigger shows the value itself, so then the list is read only
   // while open: a Timeline mounts one select per row.
   const { data } = useCycleOptionsQuery(trigger && !open ? null : projectKey);

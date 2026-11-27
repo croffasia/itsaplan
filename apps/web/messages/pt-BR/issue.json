@@ -29,12 +29,14 @@
     "timeOverBy": "{time} a mais",
     "startDate": "Data de início",
     "dueDate": "Data de vencimento",
+    "noDueDate": "Sem data de vencimento",
     "properties": "Propriedades",
     "groupState": "Estado",
     "groupPeople": "Pessoas",
     "groupPlanning": "Planejamento",
     "groupLabels": "Etiquetas",
-    "groupCustom": "Campos personalizados",
+    "groupCustom": "Campos do projeto",
+    "groupSummary": "Resumo",
     "empty": "Vazio",
     "openInNewTab": "Abrir em nova aba"
   },
@@ -296,7 +298,10 @@
     "startTime": "Hora de início",
     "endTime": "Hora de término",
     "pickOption": "Escolha uma opção…",
-    "noOption": "Sem opção"
+    "noOption": "Sem opção",
+    "addField": "Adicionar campo",
+    "findField": "Buscar um campo…",
+    "noFields": "Nenhum campo encontrado."
   },
   "editor": {
     "descriptionPlaceholder": "Adicionar descrição…"
@@ -450,6 +455,7 @@
     "untitled": "Sem título"
   },
   "archived": "Arquivado",
+  "saved": "Salvo",
   "activityHeading": "Atividade",
   "feedTabAll": "Tudo",
   "feedTabComments": "Comentários",
@@ -481,7 +487,6 @@
     "state": "Estado",
     "type": "Tipo",
     "labels": "Etiquetas",
-    "labelCount": "{count, plural, one {# etiqueta} other {# etiquetas}}",
     "noMember": "Não definido",
     "pickMember": "Escolha alguém…",
     "noCandidates": "Ninguém para escolher."

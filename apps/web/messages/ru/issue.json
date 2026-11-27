@@ -29,12 +29,14 @@
     "timeOverBy": "{time} сверх",
     "startDate": "Дата начала",
     "dueDate": "Дедлайн",
+    "noDueDate": "Без дедлайна",
     "properties": "Свойства",
     "groupState": "Статус",
     "groupPeople": "Люди",
     "groupPlanning": "Планирование",
     "groupLabels": "Метки",
-    "groupCustom": "Свои поля",
+    "groupCustom": "Поля проекта",
+    "groupSummary": "Сводка",
     "empty": "Пусто",
     "openInNewTab": "Открыть в новой вкладке"
   },
@@ -296,7 +298,10 @@
     "startTime": "Начало",
     "endTime": "Окончание",
     "pickOption": "Выберите вариант…",
-    "noOption": "Не выбрано"
+    "noOption": "Не выбрано",
+    "addField": "Добавить поле",
+    "findField": "Найти поле…",
+    "noFields": "Поля не найдены."
   },
   "editor": {
     "descriptionPlaceholder": "Добавьте описание…"
@@ -450,6 +455,7 @@
     "untitled": "Без названия"
   },
   "archived": "В архиве",
+  "saved": "Сохранено",
   "activityHeading": "Активность",
   "feedTabAll": "Все",
   "feedTabComments": "Комментарии",
@@ -481,7 +487,6 @@
     "state": "Статус",
     "type": "Тип",
     "labels": "Метки",
-    "labelCount": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}",
     "noMember": "Не задано",
     "pickMember": "Выбрать…",
     "noCandidates": "Некого выбрать."

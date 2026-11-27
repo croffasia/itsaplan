@@ -13,15 +13,18 @@ export default function InlineTextField({
   fieldType,
   saveKey,
   onSave,
+  defaultEditing = false,
 }: {
   value: string | number | null;
   fieldType: 'text' | 'number';
   saveKey: string;
   onSave: (v: string | number | null) => void;
+  // Starts in the input, for a field the person has just added.
+  defaultEditing?: boolean;
 }) {
   const t = useTranslations('issue.fields');
   const tCommon = useTranslations('common');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   const [draft, setDraft] = useState('');
   const [invalid, setInvalid] = useState(false);
   const display = value === '' || value == null ? null : String(value);

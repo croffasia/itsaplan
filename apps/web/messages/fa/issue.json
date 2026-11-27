@@ -29,12 +29,14 @@
     "timeOverBy": "{time} بیش از حد",
     "startDate": "تاریخ شروع",
     "dueDate": "تاریخ سررسید",
+    "noDueDate": "بدون تاریخ سررسید",
     "properties": "ویژگی‌ها",
     "groupState": "وضعیت",
     "groupPeople": "افراد",
     "groupPlanning": "برنامه‌ریزی",
     "groupLabels": "برچسب‌ها",
-    "groupCustom": "فیلدهای سفارشی",
+    "groupCustom": "فیلدهای پروژه",
+    "groupSummary": "خلاصه",
     "empty": "خالی",
     "openInNewTab": "باز کردن در تب جدید"
   },
@@ -296,7 +298,10 @@
     "startTime": "زمان شروع",
     "endTime": "زمان پایان",
     "pickOption": "یک گزینه انتخاب کنید…",
-    "noOption": "بدون گزینه"
+    "noOption": "بدون گزینه",
+    "addField": "افزودن فیلد",
+    "findField": "یافتن فیلد…",
+    "noFields": "فیلدی پیدا نشد."
   },
   "editor": {
     "descriptionPlaceholder": "افزودن توضیحات…"
@@ -450,6 +455,7 @@
     "untitled": "بدون عنوان"
   },
   "archived": "بایگانی شده",
+  "saved": "ذخیره شد",
   "activityHeading": "فعالیت",
   "feedTabAll": "همه",
   "feedTabComments": "دیدگاه‌ها",
@@ -481,7 +487,6 @@
     "state": "وضعیت",
     "type": "نوع",
     "labels": "برچسب‌ها",
-    "labelCount": "{count, plural, one {# برچسب} other {# برچسب}}",
     "noMember": "تنظیم نشده",
     "pickMember": "یک نفر انتخاب کنید…",
     "noCandidates": "کسی برای انتخاب وجود ندارد."

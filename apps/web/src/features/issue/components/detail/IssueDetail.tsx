@@ -3,6 +3,7 @@ import { Maximize2, X } from 'lucide-react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
 import IssueDetailContent from './IssueDetailContent';
+import IssueSavedNote from '@/components/common/IssueSavedNote';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useExitOnClickOutside } from '../../hooks/useExitOnClickOutside';
@@ -50,7 +51,10 @@ export default function IssueDetail({
             margins cancel the panel padding so its translucent, blurred backdrop
             spans the full panel width. */}
         <div className="sticky top-0 z-10 -mx-5 mb-3 flex items-center justify-between gap-2 bg-card/85 px-5 pt-5 pb-3 backdrop-blur-md sm:-mx-8 sm:px-8">
-          <span className="text-xs text-muted-foreground">{issue?.identifier ?? ''}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{issue?.identifier ?? ''}</span>
+            <IssueSavedNote issueId={issueId} />
+          </div>
           <div className="flex items-center gap-1">
             {issue && (
               <>

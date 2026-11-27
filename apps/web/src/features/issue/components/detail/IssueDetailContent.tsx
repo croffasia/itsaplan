@@ -11,6 +11,7 @@ import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen, usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
 import { useFilePaste } from '../../hooks/useFilePaste';
 import { fieldSaveKey } from '../../utils/fieldValues';
+import { useEditorKey } from '../../hooks/useEditorKey';
 import IssueAddBar, { type IssueAddTarget } from './IssueAddBar';
 import IssueDetailSections from './IssueDetailSections';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -20,7 +21,7 @@ import IssueStatusTimeline from './IssueStatusTimeline';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
-import IssuePropertyPills from './IssuePropertyPills';
+import IssuePanelProperties from './IssuePanelProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import {
   PROPERTIES_MAX_W,
@@ -98,6 +99,7 @@ export default function IssueDetailContent({
   // never requested again. Counting the replacements remounts the editors, which
   // builds the element anew and lets the raw route revalidate it.
   const [replacements, setReplacements] = useState(0);
+  const descKey = useEditorKey(issue?.description);
   const textMentions: MentionSource = {
     projectKey: project.project.ref,
     on: 'issue',
@@ -157,17 +159,16 @@ export default function IssueDetailContent({
           className="mt-4"
           placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}
-          // Remounted only when the stored text changes: the editor renders nothing
-          // for a moment while it mounts, which shortens the page under the reader
-          // and resets its scroll.
-          key={`desc-${replacements}-${issue.description}`}
+          key={`desc-${issue.id}-${replacements}-${descKey.key}`}
           editable={canEdit}
           onReady={setDescEditor}
           uploadFile={uploadFile}
           imageAttachments={imageAttachments}
           mentions={textMentions}
           onBlur={(md) => {
-            if (md !== issue.description) patch({ description: md });
+            if (md === issue.description) return;
+            descKey.saved(md);
+            patch({ description: md });
           }}
         />
       )}
@@ -215,8 +216,10 @@ export default function IssueDetailContent({
     />
   );
 
+  // Mounted per issue, so the empty rows it keeps on screen belong to one issue.
   const renderProperties = (className?: string) => (
     <IssueProperties
+      key={issue.id}
       project={project}
       issue={issue}
       fieldDefs={fieldDefs}
@@ -316,7 +319,7 @@ export default function IssueDetailContent({
           {activity}
         </div>
         <aside
-          className="hidden xl:absolute xl:end-6 xl:top-4 xl:flex xl:max-h-[calc(100%-2.5rem)] xl:w-(--issue-properties-w) xl:flex-col"
+          className="hidden xl:absolute xl:end-6 xl:top-4 xl:flex xl:h-[calc(100%-2.5rem)] xl:w-(--issue-properties-w) xl:flex-col"
           style={propertiesWidthVar}
         >
           {propertiesGrip}
@@ -360,14 +363,17 @@ export default function IssueDetailContent({
   }
 
   // The panel renders the actions in its header row (see IssueDetail), so the
-  // panel body omits them. Its properties are a row of pills under the description.
+  // panel body omits them. The Properties section is remounted per issue, so the empty
+  // fields it keeps belong to one issue.
   // The wrapper is what the bubble sticks inside: without it the bubble's parent would
   // be the panel's scroll container, which bounds a sticky child to the first screen
   // of the scroll.
   return (
     <div>
       {heading}
-      <IssuePropertyPills
+      {renderAddBar('mt-5')}
+      <IssuePanelProperties
+        key={issue.id}
         project={project}
         issue={issue}
         fieldDefs={fieldDefs}
@@ -379,7 +385,6 @@ export default function IssueDetailContent({
         watchers={issue.watchers}
         readOnly={!canEdit}
       />
-      {renderAddBar('mt-5 -mb-2 border-t pt-3')}
       {sections}
       {activity}
     </div>

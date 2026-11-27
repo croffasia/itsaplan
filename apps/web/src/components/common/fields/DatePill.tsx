@@ -19,6 +19,7 @@ export default function DatePill({
   trigger,
   clearable = true,
   disabled,
+  defaultOpen = false,
 }: {
   value: string | null;
   placeholder?: string;
@@ -31,9 +32,11 @@ export default function DatePill({
   // Days the caller cannot accept, as react-day-picker matchers ({ before }, { after },
   // { from, to }, …). They render greyed out and cannot be selected.
   disabled?: ComponentProps<typeof Calendar>['disabled'];
+  // Opens the calendar on mount, for a field the person has just added.
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('common');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const pill = trigger ?? (
     <Pill active={!!value}>
       <CalendarIcon />

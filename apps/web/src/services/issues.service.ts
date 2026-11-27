@@ -215,6 +215,9 @@ export function useOtherProjectIssueSearch(
   };
 }
 
+// Read by the "Saved" note of the issue detail.
+export const issueUpdateMutationKey = ['issue-update'] as const;
+
 // Updating an issue (drag/drop move, or an inline field edit). When `projectKey` is
 // given the project detail is patched optimistically so the change shows before the
 // request resolves, then reconciled on settle. Issue detail, comments and
@@ -222,6 +225,7 @@ export function useOtherProjectIssueSearch(
 export function useUpdateIssue(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: issueUpdateMutationKey,
     mutationFn: ({ id, patch, actionId }: { id: number; patch: IssuePatch; actionId?: number }) =>
       actionId === undefined ? updateIssue(id, patch) : applyIssueAction(id, actionId, patch),
     onMutate: async ({ id, patch }) => {

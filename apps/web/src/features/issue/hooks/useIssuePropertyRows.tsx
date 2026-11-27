@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { RefreshCw, Target } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Hash, RefreshCw, Target } from 'lucide-react';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type {
@@ -10,6 +10,7 @@ import type {
 } from '@/lib/api/endpoints/issues';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
+import { FIELD_TYPE_ICONS } from '@/components/common/fields/fieldTypeIcons';
 import { Pill } from '@/components/common/fields/Pill';
 import ReadOnlyPill from '@/components/common/fields/ReadOnlyPill';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
@@ -18,7 +19,7 @@ import StatusSelect from '@/components/common/fields/StatusSelect';
 import TypeSelect from '@/components/common/fields/TypeSelect';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { parseDate } from '@/utils/dates';
-import { fieldSaveKey } from '../utils/fieldValues';
+import { fieldSaveKey, hasFieldValue } from '../utils/fieldValues';
 import { assignableMembers } from '@/utils/project';
 import DelegateSelect from '../components/fields/DelegateSelect';
 import InitiativeSelect from '../components/fields/InitiativeSelect';
@@ -42,6 +43,12 @@ export interface IssuePropertyRowSpec {
   label: string;
   kind: 'pill' | 'named' | 'block';
   node: ReactNode;
+  // Set on a row that can be left out while it holds nothing: a custom field, and a
+  // built-in field few issues use. True when it holds a value.
+  filled?: boolean;
+  custom?: boolean;
+  // What names the field in the menu that adds a left-out row.
+  icon?: ReactNode;
 }
 
 export interface IssuePropertyGroup {
@@ -65,6 +72,11 @@ export interface IssuePropertyRowsInput {
   // shared page, or a member without work_items edit). The
   // onPatch/onSetField/onToggleLabel callbacks are never called.
   readOnly?: boolean;
+  // The row whose editor opens on mount: the one the person has just added.
+  openKey?: string | number | null;
+  // True where every row sits beside its name (the Properties grid), so an empty
+  // control says "No priority" rather than naming its field a second time.
+  named?: boolean;
 }
 
 // The issue's properties, built-in fields and custom fields, each with its editor,
@@ -82,8 +94,11 @@ export function useIssuePropertyRows({
   imageAttachments,
   watchers,
   readOnly,
+  openKey,
+  named,
 }: IssuePropertyRowsInput): IssuePropertyGroup[] {
   const t = useTranslations('issue.fields');
+  const tPriority = useTranslations('common.priority');
   const hasMembers =
     assignableMembers(project.assignees).length > 0 || issue.assigneeUserId != null;
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
@@ -119,6 +134,7 @@ export function useIssuePropertyRows({
               value={issue.priority ?? ''}
               onChange={(v) => onPatch({ priority: v || null })}
               readOnly={readOnly}
+              placeholder={named ? tPriority('none') : undefined}
             />
           ),
         },
@@ -191,6 +207,8 @@ export function useIssuePropertyRows({
             key: 'initiative',
             label: t('initiative'),
             kind: 'pill',
+            filled: issue.initiative != null,
+            icon: <Target />,
             node: readOnly ? (
               // Read-only shows the linked initiative from the issue itself, avoiding
               // the authenticated initiatives query the editable select runs.
@@ -205,6 +223,7 @@ export function useIssuePropertyRows({
                 projectKey={project.project.ref}
                 value={issue.initiative?.id ?? null}
                 onChange={(id) => onPatch({ initiativeId: id })}
+                defaultOpen={openKey === 'initiative'}
               />
             ),
           },
@@ -213,6 +232,8 @@ export function useIssuePropertyRows({
             key: 'cycle',
             label: t('cycle'),
             kind: 'pill',
+            filled: issue.cycle != null,
+            icon: <RefreshCw />,
             node: readOnly ? (
               // Read-only shows the cycle from the issue itself, avoiding the
               // authenticated cycles query the editable select runs.
@@ -228,6 +249,7 @@ export function useIssuePropertyRows({
                   projectKey={project.project.ref}
                   value={issue.cycle}
                   onChange={(cycle) => onPatch({ cycleId: cycle?.id ?? null })}
+                  defaultOpen={openKey === 'cycle'}
                 />
                 <CycleHistoryBadge issueId={issue.id} />
               </div>
@@ -237,12 +259,15 @@ export function useIssuePropertyRows({
           key: 'estimatePoints',
           label: t('estimatePoints'),
           kind: 'pill',
+          filled: issue.estimatePoints != null,
+          icon: <Hash />,
           node: (
             <EstimatePill
               kind="points"
               value={issue.estimatePoints}
               onChange={(v) => onPatch({ estimatePoints: v })}
               readOnly={readOnly}
+              defaultEditing={openKey === 'estimatePoints'}
             />
           ),
         },
@@ -250,12 +275,15 @@ export function useIssuePropertyRows({
           key: 'estimateTime',
           label: t('estimateTime'),
           kind: 'pill',
+          filled: issue.estimateMinutes != null,
+          icon: <Clock />,
           node: (
             <EstimatePill
               kind="time"
               value={issue.estimateMinutes}
               onChange={(v) => onPatch({ estimateMinutes: v })}
               readOnly={readOnly}
+              defaultEditing={openKey === 'estimateTime'}
             />
           ),
         },
@@ -275,13 +303,16 @@ export function useIssuePropertyRows({
           key: 'startDate',
           label: t('startDate'),
           kind: 'pill',
+          filled: issue.startDate != null,
+          icon: <CalendarIcon />,
           node: (
             <DatePill
               value={issue.startDate}
-              placeholder={t('startDate')}
+              placeholder={named ? t('empty') : t('startDate')}
               onChange={(v) => onPatch({ startDate: v })}
               readOnly={readOnly}
               disabled={latestStart ? { after: latestStart } : undefined}
+              defaultOpen={openKey === 'startDate'}
             />
           ),
         },
@@ -292,7 +323,7 @@ export function useIssuePropertyRows({
           node: (
             <DatePill
               value={issue.dueDate}
-              placeholder={t('dueDate')}
+              placeholder={named ? t('noDueDate') : t('dueDate')}
               onChange={(v) => onPatch({ dueDate: v })}
               readOnly={readOnly}
               disabled={earliestDue ? { before: earliestDue } : undefined}
@@ -327,11 +358,14 @@ export function useIssuePropertyRows({
         .map((def): IssuePropertyRowSpec => {
           const current = issue.fields.find((f) => f.fieldId === def.id);
           const saveKey = fieldSaveKey(def.id, current);
+          const Icon = FIELD_TYPE_ICONS[def.fieldType];
+          const field = { filled: hasFieldValue(current), custom: true, icon: <Icon /> };
           if (def.fieldType === 'markdown') {
             return {
               key: def.id,
               label: def.name,
               kind: 'block',
+              ...field,
               node: (
                 <IssueCustomFieldBody
                   def={def}
@@ -351,6 +385,7 @@ export function useIssuePropertyRows({
             key: def.id,
             label: def.name,
             kind: 'named',
+            ...field,
             node: (
               <IssueCustomFieldControl
                 def={def}
@@ -359,6 +394,7 @@ export function useIssuePropertyRows({
                 saveKey={saveKey}
                 onChange={(value) => onSetField(def.id, value)}
                 readOnly={readOnly}
+                defaultOpen={def.id === openKey}
               />
             ),
           };

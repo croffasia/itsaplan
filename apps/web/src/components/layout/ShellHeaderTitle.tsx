@@ -13,11 +13,13 @@ export default function ShellHeaderTitle({
   route,
   projectName,
   issueIdentifier,
+  issueId,
   issueAncestors,
 }: {
   route: ShellRoute;
   projectName: string;
   issueIdentifier: string | null;
+  issueId: number | null;
   issueAncestors: IssueRef[];
 }) {
   const t = useTranslations('nav');
@@ -46,6 +48,7 @@ export default function ShellHeaderTitle({
         projectKey={route.projectKey}
         projectName={projectName}
         identifier={issueIdentifier}
+        issueId={issueId}
         ancestors={issueAncestors}
       />
     );

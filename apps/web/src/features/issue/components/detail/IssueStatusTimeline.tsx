@@ -10,10 +10,11 @@ import IssueSection from './IssueSection';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
-// How the issue moved through the statuses, above the activity log. The compact bar
-// shows one share per status with the lifecycle metrics; the header button swaps in
-// the timeline, where every stretch keeps its own place on a time axis. Both open the
-// same entries on click, and the heading collapses the section.
+// How the issue moved through the statuses, above the activity log, once it has been
+// in more than one. The compact bar shows one share per status with the lifecycle
+// metrics; the header button swaps in the timeline, where every stretch keeps its own
+// place on a time axis. Both open the same entries on click, and the heading collapses
+// the section.
 //
 // Which shape it starts in, and whether it starts expanded, come from the account
 // preferences. Switching either here is deliberately not saved: it applies to the
@@ -43,7 +44,8 @@ export default function IssueStatusTimeline({
   const segments = timelineQuery.data ?? [];
   const layout = buildTimelineLayout(segments, columns, t('unknownStatus'));
 
-  if (layout.lanes.length === 0 || !prefs) return null;
+  // A single status has nothing to compare: the bar would be one full share.
+  if (layout.lanes.length < 2 || !prefs) return null;
 
   const open = openHere ?? prefs.issueStatsOpen;
   const showTimeline = timelineHere ?? prefs.issueStatsView === 'timeline';

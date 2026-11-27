@@ -29,12 +29,14 @@
     "timeOverBy": "超出 {time}",
     "startDate": "开始日期",
     "dueDate": "截止日期",
+    "noDueDate": "无截止日期",
     "properties": "属性",
     "groupState": "状态",
     "groupPeople": "人员",
     "groupPlanning": "规划",
     "groupLabels": "标签",
-    "groupCustom": "自定义字段",
+    "groupCustom": "项目字段",
+    "groupSummary": "概要",
     "empty": "空",
     "openInNewTab": "在新标签页中打开"
   },
@@ -296,7 +298,10 @@
     "startTime": "开始时间",
     "endTime": "结束时间",
     "pickOption": "选择选项…",
-    "noOption": "无选项"
+    "noOption": "无选项",
+    "addField": "添加字段",
+    "findField": "查找字段…",
+    "noFields": "未找到字段。"
   },
   "editor": {
     "descriptionPlaceholder": "添加描述…"
@@ -450,6 +455,7 @@
     "untitled": "无标题"
   },
   "archived": "已归档",
+  "saved": "已保存",
   "activityHeading": "活动记录",
   "feedTabAll": "全部",
   "feedTabComments": "评论",
@@ -481,7 +487,6 @@
     "state": "状态",
     "type": "类型",
     "labels": "标签",
-    "labelCount": "{count, plural, other {# 个标签}}",
     "noMember": "未设置",
     "pickMember": "选择…",
     "noCandidates": "没有可选对象。"

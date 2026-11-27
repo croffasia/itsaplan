@@ -29,12 +29,14 @@
     "timeOverBy": "{time} aşıldı",
     "startDate": "Başlangıç tarihi",
     "dueDate": "Bitiş tarihi",
+    "noDueDate": "Bitiş tarihi yok",
     "properties": "Özellikler",
     "groupState": "Durum",
     "groupPeople": "Kişiler",
     "groupPlanning": "Planlama",
     "groupLabels": "Etiketler",
-    "groupCustom": "Özel alanlar",
+    "groupCustom": "Proje alanları",
+    "groupSummary": "Özet",
     "empty": "Boş",
     "openInNewTab": "Yeni sekmede aç"
   },
@@ -296,7 +298,10 @@
     "startTime": "Başlangıç saati",
     "endTime": "Bitiş saati",
     "pickOption": "Bir seçenek seçin…",
-    "noOption": "Seçenek yok"
+    "noOption": "Seçenek yok",
+    "addField": "Alan ekle",
+    "findField": "Alan bul…",
+    "noFields": "Alan bulunamadı."
   },
   "editor": {
     "descriptionPlaceholder": "Açıklama ekleyin…"
@@ -450,6 +455,7 @@
     "untitled": "Başlıksız"
   },
   "archived": "Arşivlendi",
+  "saved": "Kaydedildi",
   "activityHeading": "Etkinlik",
   "feedTabAll": "Tümü",
   "feedTabComments": "Yorumlar",
@@ -481,7 +487,6 @@
     "state": "Durum",
     "type": "Tür",
     "labels": "Etiketler",
-    "labelCount": "{count, plural, one {# etiket} other {# etiket}}",
     "noMember": "Belirlenmemiş",
     "pickMember": "Birini seçin…",
     "noCandidates": "Seçilecek kimse yok."

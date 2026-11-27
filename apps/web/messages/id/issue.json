@@ -29,12 +29,14 @@
     "timeOverBy": "kelebihan {time}",
     "startDate": "Tanggal mulai",
     "dueDate": "Tenggat waktu",
+    "noDueDate": "Tanpa tenggat waktu",
     "properties": "Properti",
     "groupState": "Status",
     "groupPeople": "Orang",
     "groupPlanning": "Perencanaan",
     "groupLabels": "Label",
-    "groupCustom": "Bidang kustom",
+    "groupCustom": "Bidang proyek",
+    "groupSummary": "Ringkasan",
     "empty": "Kosong",
     "openInNewTab": "Buka di tab baru"
   },
@@ -296,7 +298,10 @@
     "startTime": "Waktu mulai",
     "endTime": "Waktu selesai",
     "pickOption": "Pilih opsi…",
-    "noOption": "Tanpa opsi"
+    "noOption": "Tanpa opsi",
+    "addField": "Tambah kolom",
+    "findField": "Cari kolom…",
+    "noFields": "Kolom tidak ditemukan."
   },
   "editor": {
     "descriptionPlaceholder": "Tambah deskripsi…"
@@ -450,6 +455,7 @@
     "untitled": "Tanpa judul"
   },
   "archived": "Diarsipkan",
+  "saved": "Tersimpan",
   "activityHeading": "Aktivitas",
   "feedTabAll": "Semua",
   "feedTabComments": "Komentar",
@@ -481,7 +487,6 @@
     "state": "Status",
     "type": "Tipe",
     "labels": "Label",
-    "labelCount": "{count, plural, one {# label} other {# label}}",
     "noMember": "Belum diatur",
     "pickMember": "Pilih anggota…",
     "noCandidates": "Tidak ada yang dapat dipilih."

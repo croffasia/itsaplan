@@ -29,12 +29,14 @@
     "timeOverBy": "{time} понад",
     "startDate": "Дата початку",
     "dueDate": "Дедлайн",
+    "noDueDate": "Без дедлайну",
     "properties": "Властивості",
     "groupState": "Статус",
     "groupPeople": "Люди",
     "groupPlanning": "Планування",
     "groupLabels": "Мітки",
-    "groupCustom": "Власні поля",
+    "groupCustom": "Поля проєкту",
+    "groupSummary": "Зведення",
     "empty": "Порожньо",
     "openInNewTab": "Відкрити в новій вкладці"
   },
@@ -296,7 +298,10 @@
     "startTime": "Початок",
     "endTime": "Завершення",
     "pickOption": "Виберіть варіант…",
-    "noOption": "Не вибрано"
+    "noOption": "Не вибрано",
+    "addField": "Додати поле",
+    "findField": "Знайти поле…",
+    "noFields": "Поля не знайдено."
   },
   "editor": {
     "descriptionPlaceholder": "Додайте опис…"
@@ -450,6 +455,7 @@
     "untitled": "Без назви"
   },
   "archived": "Архівовано",
+  "saved": "Збережено",
   "activityHeading": "Активність",
   "feedTabAll": "Усі",
   "feedTabComments": "Коментарі",
@@ -481,7 +487,6 @@
     "state": "Статус",
     "type": "Тип",
     "labels": "Мітки",
-    "labelCount": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}",
     "noMember": "Не задано",
     "pickMember": "Вибрати…",
     "noCandidates": "Нема кого вибрати."

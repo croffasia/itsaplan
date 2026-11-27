@@ -25,7 +25,9 @@ export default function IssueSectionHeading({
   const Chevron = open ? ChevronDown : ChevronRight;
 
   return (
-    <div className={cn('flex h-7 items-center justify-between gap-3', open && 'mb-2', className)}>
+    <div
+      className={cn('flex min-h-7 items-center justify-between gap-3', open && 'mb-2', className)}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"

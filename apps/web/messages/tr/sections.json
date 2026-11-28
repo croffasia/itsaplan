@@ -125,8 +125,8 @@
       "description": "Proje olaylarını harici URL'lere gönderin (her webhook özel bir anahtarla imzalanır)."
     },
     "forms": {
-      "label": "Formlar",
-      "description": "Bağlantıya sahip herkes burada iş oluşturur."
+      "label": "Talepler",
+      "description": "Ekip dışındaki kişilerin projeye nasıl talep gönderdiği."
     },
     "git": {
       "label": "Kod Depoları",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "Yeni form",
+      "new": "Yeni kanal",
       "columns": {
-        "form": "Form",
+        "form": "Kanal",
         "link": "Bağlantı"
       },
       "enabled": "Talep alıyor",
@@ -221,7 +221,8 @@
         "form": "Form",
         "questions": "Sorular",
         "issue": "İş",
-        "design": "Görünüm"
+        "design": "Görünüm",
+        "api": "API"
       },
       "questionsHint": "Ad ve e-posta her zaman sorulur.",
       "preview": "Önizleme",
@@ -253,7 +254,7 @@
       "description": "İnsanların çalışma alanının projelerine talep gönderdiği ve takip ettiği sayfa.",
       "general": "Genel",
       "forms": "Herkese açık formlar",
-      "formsHint": "Çalışma alanının projeleri, bağlantıya sahip herkesin doldurabileceği formlar yayınlayabilir. Kapatıldığında formları ve portalları açılmaz, projelerin ayarlarındaki Formlar bölümü gizlenir; hiçbir şey silinmez.",
+      "formsHint": "Çalışma alanının projeleri, bağlantıya sahip herkesin doldurabileceği formlar yayınlayabilir. Kapatıldığında formları ve portalları açılmaz, projelerin ayarlarındaki Talepler bölümü gizlenir; hiçbir şey silinmez.",
       "name": "Ad",
       "nameHint": "İnsanların portalda ve e-postalarında çalışma alanının adı yerine gördüğü ad. Boş bırakılırsa çalışma alanının adı görünür.",
       "address": "Adres",

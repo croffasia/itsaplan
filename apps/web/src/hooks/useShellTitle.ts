@@ -47,6 +47,8 @@ export function useShellTitle(
       const view = views.find((v) => v.id === route.activeViewId);
       return view ? [view.name] : [];
     }
+    if (sub && sections.some((s) => s.group === 'work' && s.slug === sub))
+      return [sectionText(sub).label];
     if (sub && sub in SECTION_LABELS)
       return [t(SECTION_LABELS[sub as keyof typeof SECTION_LABELS])];
     return [];

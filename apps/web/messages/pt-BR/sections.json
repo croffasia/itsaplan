@@ -125,8 +125,8 @@
       "description": "Envie eventos do projeto para URLs externas, assinados com um segredo por webhook."
     },
     "forms": {
-      "label": "Formulários",
-      "description": "Qualquer pessoa com o link cria uma issue aqui."
+      "label": "Solicitações",
+      "description": "Como pessoas de fora da equipe enviam solicitações ao projeto."
     },
     "git": {
       "label": "Repositórios",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "Novo formulário",
+      "new": "Novo canal",
       "columns": {
-        "form": "Formulário",
+        "form": "Canal",
         "link": "Link"
       },
       "enabled": "Aceita solicitações",
@@ -221,7 +221,8 @@
         "form": "Formulário",
         "questions": "Perguntas",
         "issue": "Issue",
-        "design": "Design"
+        "design": "Design",
+        "api": "API"
       },
       "questionsHint": "Nome e e-mail são sempre pedidos.",
       "preview": "Pré-visualização",
@@ -253,7 +254,7 @@
       "description": "A página onde as pessoas enviam solicitações aos projetos do espaço de trabalho e as acompanham.",
       "general": "Geral",
       "forms": "Formulários públicos",
-      "formsHint": "Os projetos do espaço de trabalho podem publicar formulários que qualquer pessoa com o link preenche. Desativado, seus formulários e portais deixam de abrir e os projetos perdem a seção Formulários; nada é apagado.",
+      "formsHint": "Os projetos do espaço de trabalho podem publicar formulários que qualquer pessoa com o link preenche. Desativado, seus formulários e portais deixam de abrir e os projetos perdem a seção Solicitações; nada é apagado.",
       "name": "Nome",
       "nameHint": "O que as pessoas veem no portal e nos e-mails dele no lugar do nome do espaço de trabalho. Vazio mostra o nome do espaço de trabalho.",
       "address": "Endereço",

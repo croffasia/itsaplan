@@ -5,10 +5,10 @@ import { runOrigin } from '../core/run-initiator';
 import { rootRunOf } from '../core/run-queue';
 import { filterScheduleIssues, isScheduleSupported, type ScheduleForExtension } from './extension';
 
-// The runs schedules queue on issues: a 'status' schedule's when an issue enters its
-// column, and those of an extension's types when the extension calls queueScheduleRuns.
-// Every write that puts issues into a column calls queueStatusRuns, next to
-// recordStatusChange.
+// The runs schedules queue on what happens in a project: a 'status' schedule's when an
+// issue enters its column, and those of an extension's types when the extension calls
+// queueScheduleRuns, or queueScheduleRunsOnNone for what has no issue. Every write that puts
+// issues into a column calls queueStatusRuns, next to recordStatusChange.
 
 type IssueLead = (issue: { identifier: string; title: string }) => string;
 
@@ -32,6 +32,21 @@ const scheduleFields = {
 // An agent that made the change does not start its own schedule.
 function notActor(actorUserId: string | null | undefined) {
   return actorUserId ? ne(aiAgent.userId, actorUserId) : undefined;
+}
+
+function extensionSchedules(scheduleIds: number[], actorUserId: string | null | undefined) {
+  return db
+    .select(scheduleFields)
+    .from(agentSchedule)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentSchedule.agentId))
+    .where(
+      and(
+        inArray(agentSchedule.id, scheduleIds),
+        notInArray(agentSchedule.type, ['cron', 'status']),
+        eq(agentSchedule.status, 'active'),
+        notActor(actorUserId),
+      ),
+    );
 }
 
 // Ends the status runs of the given issues that belong to another column and have not
@@ -98,23 +113,49 @@ export async function queueScheduleRuns(
   lead: IssueLead,
 ): Promise<void> {
   if (scheduleIds.length === 0 || issueIds.length === 0) return;
-  const schedules = await db
-    .select(scheduleFields)
-    .from(agentSchedule)
-    .innerJoin(aiAgent, eq(aiAgent.id, agentSchedule.agentId))
-    .where(
-      and(
-        inArray(agentSchedule.id, scheduleIds),
-        notInArray(agentSchedule.type, ['cron', 'status']),
-        eq(agentSchedule.status, 'active'),
-        notActor(actorUserId),
-      ),
-    );
+  const schedules = await extensionSchedules(scheduleIds, actorUserId);
   await insertIssueRuns(
     schedules.map((schedule) => ({ ...schedule, lead })),
     issueIds,
     actorUserId,
   );
+}
+
+// Queues one run of each of the schedules on no issue, for an extension whose types also start
+// on what has none. `lead` opens each run's prompt, as an issue's does. A schedule of a core
+// type or a paused one is skipped.
+export async function queueScheduleRunsOnNone(
+  scheduleIds: number[],
+  actorUserId: string | null | undefined,
+  lead: string,
+): Promise<void> {
+  if (scheduleIds.length === 0) return;
+  const rows = await extensionSchedules(scheduleIds, actorUserId);
+  const schedules = rows.filter(isScheduleSupported);
+  if (schedules.length === 0) return;
+  const { startedByUserId, parentRunId } = await runOrigin(actorUserId);
+  await db.insert(agentRun).values(
+    schedules.map((schedule) => ({
+      agentId: schedule.agentId,
+      projectId: schedule.projectId,
+      scheduleId: schedule.id,
+      trigger: 'event',
+      startedByUserId,
+      parentRunId,
+      rootRunId: rootRunOf(parentRunId),
+      prompt: issueRunPrompt(lead, schedule.prompt),
+      nextAttemptAt: sql`now() + make_interval(secs => ${schedule.delaySec})`,
+    })),
+  );
+  await db
+    .update(agentSchedule)
+    .set({ lastRunAt: new Date() })
+    .where(
+      inArray(
+        agentSchedule.id,
+        schedules.map((schedule) => schedule.id),
+      ),
+    );
 }
 
 // A schedule's run is the project's work, so it has no initiator. It keeps who made the

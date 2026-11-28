@@ -125,8 +125,8 @@
       "description": "Invia gli eventi del progetto a URL esterni, firmati con un secret per ogni webhook."
     },
     "forms": {
-      "label": "Moduli",
-      "description": "Consenti a chiunque con il link di aprire un'issue qui."
+      "label": "Richieste",
+      "description": "Come chi è fuori dalla squadra invia richieste al progetto."
     },
     "git": {
       "label": "Repository",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "Nuovo modulo",
+      "new": "Nuovo canale",
       "columns": {
-        "form": "Modulo",
+        "form": "Canale",
         "link": "Link"
       },
       "enabled": "Accetta richieste",
@@ -221,7 +221,8 @@
         "form": "Modulo",
         "questions": "Domande",
         "issue": "Issue",
-        "design": "Design"
+        "design": "Design",
+        "api": "API"
       },
       "questionsHint": "Nome ed email vengono sempre richiesti.",
       "preview": "Anteprima",
@@ -253,7 +254,7 @@
       "description": "La pagina dove le persone inviano richieste ai progetti del workspace e le seguono.",
       "general": "Generale",
       "forms": "Moduli pubblici",
-      "formsHint": "I progetti del workspace possono pubblicare moduli che chiunque con il link può compilare. Disattivati, i loro moduli e portali smettono di aprirsi e i progetti perdono le impostazioni Moduli; nulla viene eliminato.",
+      "formsHint": "I progetti del workspace possono pubblicare moduli che chiunque con il link può compilare. Disattivati, i loro moduli e portali smettono di aprirsi e i progetti perdono le impostazioni Richieste; nulla viene eliminato.",
       "name": "Nome",
       "nameHint": "Ciò che le persone vedono sul portale e nelle sue email al posto del nome del workspace. Vuoto mostra il nome del workspace.",
       "address": "Indirizzo",

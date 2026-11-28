@@ -5,5 +5,5 @@ import SettingsExtraSectionPage from '@/features/settings/SettingsExtraSectionPa
 
 export default function Page() {
   const { section } = useParams<{ section: string }>();
-  return <SettingsExtraSectionPage slug={section} aiTeam />;
+  return <SettingsExtraSectionPage slug={section} group="ai-team" />;
 }

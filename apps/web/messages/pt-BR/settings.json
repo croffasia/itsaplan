@@ -17,8 +17,7 @@
       "cron": "Por agendamento",
       "status": "Quando uma issue entra em um estado"
     },
-    "moreTypes": "Mais gatilhos no Cloud e no Pro",
-    "moreTypesHint": "Novas issues, atribuições, etiquetas e comentários",
+    "moreTypes": "Disponível no Cloud e no Pro",
     "taskOptional": "Tarefa (opcional)",
     "issueTaskPlaceholder": "Escreva os critérios de aceitação na descrição da issue.",
     "issueTaskHint": "O agente recebe a issue e o que aconteceu com ela. Diga o que fazer com ela.",
@@ -87,7 +86,27 @@
     "createAgent": "Criar um agente",
     "empty": "Nenhum agendamento ainda",
     "emptyHint": "Escolha um agente, uma tarefa e com que frequência ela roda.",
-    "deleteMessage": "O agendamento <v>{name}</v> e seu histórico de execuções serão removidos. Isso não pode ser desfeito."
+    "deleteMessage": "O agendamento <v>{name}</v> e seu histórico de execuções serão removidos. Isso não pode ser desfeito.",
+    "events": {
+      "issue": {
+        "created": "Uma issue é criada",
+        "assigned": "Uma issue é atribuída",
+        "label_added": "Uma etiqueta é adicionada"
+      },
+      "comment": {
+        "created": "Um comentário é adicionado"
+      },
+      "request": {
+        "received": "Chega uma solicitação",
+        "accepted": "Uma solicitação é aceita",
+        "merged": "Uma solicitação é mesclada",
+        "declined": "Uma solicitação é recusada"
+      }
+    },
+    "groups": {
+      "issue": "Issue",
+      "request": "Solicitação"
+    }
   },
   "agents": {
     "empty": "Nenhum agente ainda",

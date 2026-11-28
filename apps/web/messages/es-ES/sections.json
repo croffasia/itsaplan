@@ -125,8 +125,8 @@
       "description": "Enviar eventos del proyecto a URLs externas, firmados con un secreto para cada webhook."
     },
     "forms": {
-      "label": "Formularios",
-      "description": "Cualquiera con el enlace crea aquí un ticket."
+      "label": "Solicitudes",
+      "description": "Cómo envía solicitudes al proyecto la gente de fuera del equipo."
     },
     "git": {
       "label": "Repositorios",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "Nuevo formulario",
+      "new": "Nuevo canal",
       "columns": {
-        "form": "Formulario",
+        "form": "Canal",
         "link": "Enlace"
       },
       "enabled": "Acepta solicitudes",
@@ -221,7 +221,8 @@
         "form": "Formulario",
         "questions": "Preguntas",
         "issue": "Ticket",
-        "design": "Diseño"
+        "design": "Diseño",
+        "api": "API"
       },
       "questionsHint": "El nombre y el correo se piden siempre.",
       "preview": "Vista previa",
@@ -253,7 +254,7 @@
       "description": "La página donde las personas envían solicitudes a los proyectos del espacio de trabajo y las siguen.",
       "general": "General",
       "forms": "Formularios públicos",
-      "formsHint": "Los proyectos del espacio de trabajo pueden publicar formularios que rellena cualquiera con el enlace. Desactivado, sus formularios y portales dejan de abrirse y los proyectos pierden su sección Formularios; no se borra nada.",
+      "formsHint": "Los proyectos del espacio de trabajo pueden publicar formularios que rellena cualquiera con el enlace. Desactivado, sus formularios y portales dejan de abrirse y los proyectos pierden su sección Solicitudes; no se borra nada.",
       "name": "Nombre",
       "nameHint": "Lo que ven las personas en el portal y en sus correos en lugar del nombre del espacio de trabajo. Vacío muestra el nombre del espacio de trabajo.",
       "address": "Dirección",

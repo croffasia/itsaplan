@@ -4,6 +4,7 @@ import type { Attachment } from '@/lib/api/endpoints/attachments';
 import type { IssueWithWatchers } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
+import { IssueSectionExtras } from '@/cloud';
 import type { IssueAddTarget } from './IssueAddBar';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueChecklistsPanel from './IssueChecklistsPanel';
@@ -13,9 +14,9 @@ import IssueLinksPanel from './IssueLinksPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueWorklogPanel from './IssueWorklogPanel';
 
-// The collapsible sections under the written content, in the order of the add bar.
-// Each one shows only when it has something in it or is being added to; what is being
-// added is held by the issue detail, which renders the add bar as well.
+// The collapsible sections under the written content, in the order of the add bar, then
+// those a build adds. Each one shows only when it has something in it or is being added
+// to; what is being added is held by the issue detail, which renders the add bar as well.
 export default function IssueDetailSections({
   project,
   issue,
@@ -102,6 +103,8 @@ export default function IssueDetailSections({
           onAddingChange={(on) => onAddingChange(on ? { section: 'worklog' } : null)}
         />
       )}
+
+      <IssueSectionExtras project={project} issue={issue} />
     </>
   );
 }

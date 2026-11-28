@@ -59,6 +59,9 @@ export const runnerQueuePath = (ref: string) => aiTeamPath(ref, 'queue');
 
 export const inboxPath = (ref: string) => `${projectPath(ref)}/inbox`;
 
+// A section of the 'work' group a build adds (see SettingsSection).
+export const workSectionPath = (ref: string, section: string) => `${projectPath(ref)}/${section}`;
+
 export const aiAgentsPath = (ref: string) => `${projectPath(ref)}/agents`;
 
 export const mcpServerPath = (ref: string) => `${projectPath(ref)}/mcp`;

@@ -17,8 +17,7 @@
       "cron": "Bir zaman çizelgesine göre",
       "status": "Bir iş belirli bir duruma girdiğinde"
     },
-    "moreTypes": "Cloud ve Pro'da daha fazla tetikleyici",
-    "moreTypesHint": "Yeni işler, atamalar, etiketler ve yorumlar",
+    "moreTypes": "Cloud ve Pro'da mevcut",
     "taskOptional": "Görev (isteğe bağlı)",
     "issueTaskPlaceholder": "Kabul kriterlerini işin açıklamasına yazın.",
     "issueTaskHint": "Ajan işi ve işe ne olduğunu alır. Ne yapması gerektiğini ekleyin.",
@@ -87,7 +86,27 @@
     "createAgent": "Ajan oluştur",
     "empty": "Henüz zamanlama yok",
     "emptyHint": "Bir ajan, bir görev ve ne sıklıkla çalışacağını seçin.",
-    "deleteMessage": "<v>{name}</v> zamanlaması ve çalışma geçmişi kaldırılacaktır. Bu işlem geri alınamaz."
+    "deleteMessage": "<v>{name}</v> zamanlaması ve çalışma geçmişi kaldırılacaktır. Bu işlem geri alınamaz.",
+    "events": {
+      "issue": {
+        "created": "Bir iş oluşturulduğunda",
+        "assigned": "Bir iş atandığında",
+        "label_added": "Bir etiket eklendiğinde"
+      },
+      "comment": {
+        "created": "Bir yorum eklendiğinde"
+      },
+      "request": {
+        "received": "Bir talep geldiğinde",
+        "accepted": "Bir talep kabul edildiğinde",
+        "merged": "Bir talep birleştirildiğinde",
+        "declined": "Bir talep reddedildiğinde"
+      }
+    },
+    "groups": {
+      "issue": "İş",
+      "request": "Talep"
+    }
   },
   "agents": {
     "empty": "Henüz ajan yok",

@@ -64,3 +64,4 @@ deadlocking. `inbox` and `runner-queue` are outside the order: each is taken alo
 A new scope kind also needs its entry in `scopeKind` in `apps/api/src/modules/sync/service.ts`, its
 name in `apps/api/src/modules/sync/model.ts` and the mirror in `apps/web/src/utils/revScopes.ts`. A
 scope across projects has no `scopeKind` entry: `apps/api/src/modules/sync/index.ts` handles it.
+An extension's kinds come through `setScopeKinds`, on rows its own triggers move.

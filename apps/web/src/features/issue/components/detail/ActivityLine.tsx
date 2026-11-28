@@ -9,6 +9,7 @@ import { ACTION_ICON } from '../../utils/activityIcons';
 import { useActivityText } from '../../hooks/useActivityText';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
+import { activityActionIcons } from '@/cloud';
 
 // One change-log entry in an activity list: icon, actor, the sentence describing
 // the change, and how long ago it happened. A change with a long value (a new
@@ -29,7 +30,8 @@ export default function ActivityLine({
   const t = useTranslations('issue');
   const relativeTime = useRelativeTime();
   const describeActivity = useActivityText();
-  const Icon = (item.action && ACTION_ICON[item.action]) || CircleDot;
+  const Icon =
+    (item.action && (ACTION_ICON[item.action] || activityActionIcons[item.action])) || CircleDot;
   const { line, popover } = describeActivity(item);
   const actor = item.actorName ?? t('system');
   return (

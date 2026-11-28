@@ -26,10 +26,11 @@ import {
   mcpServerPath,
   membersPath,
   projectPath,
+  workSectionPath,
 } from '@/utils/paths';
 import { accountPath, ACCOUNT_SECTIONS } from '@/utils/accountSections';
 import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
-import { useAiTeamSections } from '@/hooks/useSettingsNavGroups';
+import { useAiTeamSections, useWorkSections } from '@/hooks/useSettingsNavGroups';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -55,6 +56,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   const router = useRouter();
   const { can } = usePermissions();
   const aiTeamSections = useAiTeamSections();
+  const workSections = useWorkSections();
   const features = useProjectFeatures();
   const { data: session } = useSession();
   const { groups } = useSettingsNavGroups(projectKey);
@@ -70,6 +72,15 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   if (projectKey) {
     const key = projectKey;
     add('nav.inbox', t('inbox'), <Inbox />, inboxPath(key), 'notifications unread');
+    for (const s of workSections) {
+      if (can(s.resource, s.viewAction ?? 'read'))
+        add(
+          `nav.work.${s.slug}`,
+          sectionText(s.slug).label,
+          <s.icon />,
+          workSectionPath(key, s.slug),
+        );
+    }
     if (features.dashboards && can('dashboards', 'read'))
       add('nav.dashboards', t('dashboards'), <LayoutDashboard />, dashboardsPath(key), 'charts');
     add(

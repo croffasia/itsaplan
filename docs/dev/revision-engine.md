@@ -125,6 +125,11 @@ A new kind of scope touches two more places: the entry in `scopeKind` in
 watcher must be allowed to read, and the mirror in `apps/web/src/utils/revScopes.ts`.
 `packages/db/AGENTS.md` keeps the same recipe next to the schema.
 
+An extension adds kinds of its own with `setScopeKinds` (`apps/api/src/modules/sync/service.ts`):
+each names its key in `revision` and the resource its watchers must be allowed to read, as the
+core's do, and its migration's triggers move the rows with `bump_rev` and the project id. Its
+screens name the scope themselves; `revScopes.ts` holds the core's only.
+
 ## Four rules before you touch the triggers
 
 **Take the scopes in one order everywhere: board, then issue, then initiative.** Opposite orders

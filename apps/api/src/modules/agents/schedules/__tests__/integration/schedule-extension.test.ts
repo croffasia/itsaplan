@@ -5,7 +5,7 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
 import { setScheduleIssueFilter, setScheduleOptionsCheck, setScheduleTypes } from '../../extension';
-import { queueScheduleRuns } from '../../issue-runs';
+import { queueScheduleRuns, queueScheduleRunsOnNone } from '../../issue-runs';
 
 // What an extension installs into agent schedules: a type of its own, the options it
 // keeps on a schedule, and the issues that start a run. Each test installs what it
@@ -171,6 +171,40 @@ describe('agent schedule extension', () => {
     await schedules(asOwner)({ scheduleId: event.id }).patch({ status: 'paused' });
     await queueScheduleRuns([event.id], [issue.id], null, lead);
     expect(await runsOf(asOwner, event.id)).toEqual([]);
+  });
+
+  it('queues a run of an added type on no issue, but not for the agent itself', async () => {
+    const { owner, asOwner, agent } = await setup();
+    setScheduleTypes(['event']);
+    const event = (
+      await schedules(asOwner).post({
+        agentId: agent.id,
+        name: 'Inbox',
+        type: 'event',
+        prompt: 'Sort it.',
+      })
+    ).data!;
+    const cron = (
+      await schedules(asOwner).post({
+        agentId: agent.id,
+        name: 'Daily',
+        prompt: 'Triage.',
+        cron: '0 9 * * *',
+      })
+    ).data!;
+
+    await queueScheduleRunsOnNone([event.id, cron.id], owner.userId, 'Something came in.');
+    const runs = await runsOf(asOwner, event.id);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({
+      status: 'pending',
+      trigger: 'event',
+      prompt: 'Something came in.\n\nSort it.',
+    });
+    expect(await runsOf(asOwner, cron.id)).toEqual([]);
+
+    await queueScheduleRunsOnNone([event.id], agent.userId, 'Again.');
+    expect(await runsOf(asOwner, event.id)).toHaveLength(1);
   });
 
   it('starts a status run only on the issues the filter lets through', async () => {

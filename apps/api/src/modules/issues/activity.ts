@@ -367,6 +367,9 @@ export async function createComment(input: {
   // Where the comment was written: a repository host, by authorName or by the member who
   // connected that account there, or a source an extension adds. Its mentions reach nobody here.
   authorSource?: ActorSource;
+  // A comment that keeps what was said before elsewhere, such as the messages of a request an
+  // extension files as this issue: no event, mention run, notification or push to a host.
+  quiet?: boolean;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
   const actorName = input.authorName ?? (await userName(actorUserId));
@@ -392,6 +395,7 @@ export async function createComment(input: {
     })
     .returning();
   const comment = mapFeedItem(row);
+  if (input.quiet) return comment;
 
   const projectRows = await db
     .select({ projectId: issue.projectId })

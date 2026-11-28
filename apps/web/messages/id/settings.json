@@ -17,8 +17,7 @@
       "cron": "Sesuai jadwal",
       "status": "Saat issue masuk ke status"
     },
-    "moreTypes": "Lebih banyak pemicu di Cloud dan Pro",
-    "moreTypesHint": "Issue baru, penugasan, label, dan komentar",
+    "moreTypes": "Tersedia di Cloud dan Pro",
     "taskOptional": "Tugas (opsional)",
     "issueTaskPlaceholder": "Tulis kriteria penerimaan di deskripsi issue.",
     "issueTaskHint": "Agen menerima issue dan apa yang terjadi padanya. Tambahkan apa yang harus dilakukan.",
@@ -87,7 +86,27 @@
     "createAgent": "Buat agen",
     "empty": "Belum ada jadwal",
     "emptyHint": "Pilih agen, tugas, dan seberapa sering tugas dijalankan.",
-    "deleteMessage": "Jadwal <v>{name}</v> dan riwayat eksekusinya akan dihapus. Tindakan ini tidak dapat dibatalkan."
+    "deleteMessage": "Jadwal <v>{name}</v> dan riwayat eksekusinya akan dihapus. Tindakan ini tidak dapat dibatalkan.",
+    "events": {
+      "issue": {
+        "created": "Issue dibuat",
+        "assigned": "Issue ditugaskan",
+        "label_added": "Label ditambahkan"
+      },
+      "comment": {
+        "created": "Komentar ditambahkan"
+      },
+      "request": {
+        "received": "Permintaan masuk",
+        "accepted": "Permintaan diterima",
+        "merged": "Permintaan digabungkan",
+        "declined": "Permintaan ditolak"
+      }
+    },
+    "groups": {
+      "issue": "Issue",
+      "request": "Permintaan"
+    }
   },
   "agents": {
     "empty": "Belum ada agen",

@@ -17,8 +17,7 @@
       "cron": "Según una programación",
       "status": "Cuando un ticket entra en un estado"
     },
-    "moreTypes": "Más disparadores en Cloud y Pro",
-    "moreTypesHint": "Tickets nuevos, asignaciones, etiquetas y comentarios",
+    "moreTypes": "Disponible en Cloud y Pro",
     "taskOptional": "Tarea (opcional)",
     "issueTaskPlaceholder": "Escribe los criterios de aceptación en la descripción del ticket.",
     "issueTaskHint": "El agente recibe el ticket y lo que le ha pasado. Añade qué hacer con él.",
@@ -87,7 +86,27 @@
     "createAgent": "Crear un agente",
     "empty": "Todavía no hay programaciones",
     "emptyHint": "Elige un agente, una tarea y cada cuánto se ejecuta.",
-    "deleteMessage": "La programación <v>{name}</v> y su historial de ejecuciones se quitarán. No se puede deshacer."
+    "deleteMessage": "La programación <v>{name}</v> y su historial de ejecuciones se quitarán. No se puede deshacer.",
+    "events": {
+      "issue": {
+        "created": "Se crea un ticket",
+        "assigned": "Se asigna un ticket",
+        "label_added": "Se añade una etiqueta"
+      },
+      "comment": {
+        "created": "Se añade un comentario"
+      },
+      "request": {
+        "received": "Llega una solicitud",
+        "accepted": "Se acepta una solicitud",
+        "merged": "Se fusiona una solicitud",
+        "declined": "Se rechaza una solicitud"
+      }
+    },
+    "groups": {
+      "issue": "Ticket",
+      "request": "Solicitud"
+    }
   },
   "agents": {
     "empty": "Todavía no hay agentes",

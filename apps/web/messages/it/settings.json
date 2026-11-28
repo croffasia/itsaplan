@@ -17,8 +17,7 @@
       "cron": "Secondo una pianificazione",
       "status": "Quando un'issue entra in uno stato"
     },
-    "moreTypes": "Più trigger in Cloud e Pro",
-    "moreTypesHint": "Nuove issue, assegnazioni, etichette e commenti",
+    "moreTypes": "Disponibile in Cloud e Pro",
     "taskOptional": "Task (facoltativo)",
     "issueTaskPlaceholder": "Scrivi i criteri di accettazione nella descrizione dell'issue.",
     "issueTaskHint": "L'agente riceve l'issue e ciò che le è successo. Aggiungi cosa farne.",
@@ -87,7 +86,27 @@
     "createAgent": "Crea un agente",
     "empty": "Nessuna pianificazione",
     "emptyHint": "Scegli un agente, un task e con quale frequenza viene eseguito.",
-    "deleteMessage": "La pianificazione <v>{name}</v> e il suo storico esecuzioni verranno rimossi. Non è possibile annullare."
+    "deleteMessage": "La pianificazione <v>{name}</v> e il suo storico esecuzioni verranno rimossi. Non è possibile annullare.",
+    "events": {
+      "issue": {
+        "created": "Viene creata un'issue",
+        "assigned": "Viene assegnata un'issue",
+        "label_added": "Viene aggiunta un'etichetta"
+      },
+      "comment": {
+        "created": "Viene aggiunto un commento"
+      },
+      "request": {
+        "received": "Arriva una richiesta",
+        "accepted": "Una richiesta viene accettata",
+        "merged": "Una richiesta viene unita",
+        "declined": "Una richiesta viene rifiutata"
+      }
+    },
+    "groups": {
+      "issue": "Issue",
+      "request": "Richiesta"
+    }
   },
   "agents": {
     "empty": "Nessun agente",

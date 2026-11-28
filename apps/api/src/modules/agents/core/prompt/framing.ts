@@ -44,7 +44,9 @@ export interface RunForPrompt {
 // a clarifying question, so the agent acts on reasonable assumptions instead of asking.
 // Kept in the system prompt (not the framed user message) so it outweighs the task
 // text and applies even when a schedule's task prompt is vague.
-export function runModePreamble(run: Pick<RunForPrompt, 'trigger' | 'documentId'>): string {
+export function runModePreamble(
+  run: Pick<RunForPrompt, 'trigger' | 'documentId' | 'issueId'>,
+): string {
   const lines = ['## Run mode'];
   if (run.trigger === 'schedule' || run.trigger === 'manual') {
     lines.push(
@@ -59,7 +61,10 @@ export function runModePreamble(run: Pick<RunForPrompt, 'trigger' | 'documentId'
       'task with your tools, making reasonable assumptions; never ask for clarification.',
     );
   } else {
-    const subject = run.documentId != null ? 'a document' : 'an issue';
+    // An extension's schedule also starts on what happens in the project outside an issue.
+    let subject = 'the project';
+    if (run.documentId != null) subject = 'a document';
+    else if (run.issueId != null) subject = 'an issue';
     lines.push(
       `You are running autonomously in response to activity on ${subject}. No human is`,
       'waiting to answer you, so do not ask clarifying questions or wait for confirmation;',
@@ -70,7 +75,8 @@ export function runModePreamble(run: Pick<RunForPrompt, 'trigger' | 'documentId'
 }
 
 export function framePrompt(run: RunForPrompt): string {
-  if (run.trigger === 'schedule' || run.trigger === 'manual' || run.trigger === 'api') {
+  const onNone = run.trigger === 'event' && run.issueId == null;
+  if (run.trigger === 'schedule' || run.trigger === 'manual' || run.trigger === 'api' || onNone) {
     return `Carry out the following task:\n\n${run.prompt}`;
   }
   if (run.documentId != null) return frameDocumentMention(run);

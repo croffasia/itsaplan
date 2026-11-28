@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.14.0](https://github.com/croffasia/itsaplan/compare/v1.13.0...v1.14.0) (2026-11-28)
+
+
+### Features
+
+* choose the order of pinned Docs pages ([#1012](https://github.com/croffasia/itsaplan/issues/1012)) ([0ca5a12](https://github.com/croffasia/itsaplan/commit/0ca5a1240cecc03a1bbde324da0d71e98bec571f))
+* let an extension add sources of activity authors, with their icons ([#1027](https://github.com/croffasia/itsaplan/issues/1027)) ([5418a5e](https://github.com/croffasia/itsaplan/commit/5418a5e438d94b0ccbc6efc01b373f05eec9dc61))
+* let an extension add work pages, issue sections, live refresh scopes and runs on no work item ([#1030](https://github.com/croffasia/itsaplan/issues/1030)) ([612ff8a](https://github.com/croffasia/itsaplan/commit/612ff8a9a2be9f1b45b787e8bd5e348df361d875))
+* redesign Accounts and team Git and list the repositories each host token reaches ([#1026](https://github.com/croffasia/itsaplan/issues/1026)) ([3be0afe](https://github.com/croffasia/itsaplan/commit/3be0afe4db94a9333171d46721481a4946c7cb9e))
+* sync repository issue comments, files and authors both ways ([#1019](https://github.com/croffasia/itsaplan/issues/1019)) ([7e5e846](https://github.com/croffasia/itsaplan/commit/7e5e846ace3c3c71c4d3942e7c9d8a6e394ebfb5))
+* **web:** keep board filters per project and tab ([#1016](https://github.com/croffasia/itsaplan/issues/1016)) ([e0d91ed](https://github.com/croffasia/itsaplan/commit/e0d91ed7ee3575c6941d239e357753eb311338dc))
+
+
+### Improvements
+
+* grant role permissions in order ([#1008](https://github.com/croffasia/itsaplan/issues/1008)) ([909b0ac](https://github.com/croffasia/itsaplan/commit/909b0ac25a2c93447556b90225306b3acdde6b5d))
+* **web:** a searchable filter menu with avatars, icons and issue counts ([#1018](https://github.com/croffasia/itsaplan/issues/1018)) ([45ab408](https://github.com/croffasia/itsaplan/commit/45ab4089efaf5bafbd854bd091094f259b6048c4))
+* **web:** give agent answers readable typography ([#1013](https://github.com/croffasia/itsaplan/issues/1013)) ([e811283](https://github.com/croffasia/itsaplan/commit/e8112831b365c5be6e9462d331e62eeaa6f40056))
+* **web:** show only filled issue properties and add the rest from a menu ([#1029](https://github.com/croffasia/itsaplan/issues/1029)) ([5e68bc6](https://github.com/croffasia/itsaplan/commit/5e68bc6e5dfac2cab00f729099450b66eaaaec92))
+* **web:** show only filled issue sections and add from one row ([#1021](https://github.com/croffasia/itsaplan/issues/1021)) ([8e90692](https://github.com/croffasia/itsaplan/commit/8e906928fb6a3faf3657ecdce78ab21cc323f3a2))
+
+
+### Bug Fixes
+
+* **api:** store runner payloads that carry a NUL character ([#1025](https://github.com/croffasia/itsaplan/issues/1025)) ([761a72e](https://github.com/croffasia/itsaplan/commit/761a72ec22752134a193d13ef60f01d07415db4f))
+* **auth:** keep MCP refresh working after the consenting session expired ([#1023](https://github.com/croffasia/itsaplan/issues/1023)) ([135bc5f](https://github.com/croffasia/itsaplan/commit/135bc5f52bff00567e999fe25420199f136fc4e4))
+* **web:** let the Docs home scroll on small screens ([#1010](https://github.com/croffasia/itsaplan/issues/1010)) ([5d8d1a4](https://github.com/croffasia/itsaplan/commit/5d8d1a4b97bc4fba7f19642c56792e6b8617c24d))
+
+
+### Documentation
+
+* add a Trusted by row and a list of teams ([#1005](https://github.com/croffasia/itsaplan/issues/1005)) ([93f5bb0](https://github.com/croffasia/itsaplan/commit/93f5bb05b24480c269e139e2f6cd4db6048287e8))
+
 ## [1.13.0](https://github.com/croffasia/itsaplan/compare/v1.12.0...v1.13.0) (2026-11-24)
 
 

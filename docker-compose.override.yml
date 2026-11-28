@@ -1,0 +1,36 @@
+services:
+  claude-mcp:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '169.58.123.186:80:80'
+      - '169.58.123.186:443:443'
+    volumes:
+      - ./deploy/claude-mcp.Caddyfile:/etc/caddy/Caddyfile:ro
+      - claude-caddy-data:/data
+      - claude-caddy-config:/config
+    healthcheck:
+      test: ['CMD', 'caddy', 'validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  claude-caddy-data:
+  claude-caddy-config:

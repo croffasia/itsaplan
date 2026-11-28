@@ -17,8 +17,7 @@
       "cron": "On a schedule",
       "status": "When an issue enters a state"
     },
-    "moreTypes": "More triggers in Cloud and Pro",
-    "moreTypesHint": "New issues, assignments, labels and comments",
+    "moreTypes": "Available in Cloud and Pro",
     "taskOptional": "Task (optional)",
     "issueTaskPlaceholder": "Write the acceptance criteria into the issue description.",
     "issueTaskHint": "The agent gets the issue and what happened to it. Add what to do with it.",
@@ -87,7 +86,27 @@
     "createAgent": "Create an agent",
     "empty": "No schedules yet",
     "emptyHint": "Pick an agent, a task, and how often it runs.",
-    "deleteMessage": "The schedule <v>{name}</v> and its run history will be removed. This cannot be undone."
+    "deleteMessage": "The schedule <v>{name}</v> and its run history will be removed. This cannot be undone.",
+    "events": {
+      "issue": {
+        "created": "An issue is created",
+        "assigned": "An issue is assigned",
+        "label_added": "A label is added"
+      },
+      "comment": {
+        "created": "A comment is added"
+      },
+      "request": {
+        "received": "A request comes in",
+        "accepted": "A request is accepted",
+        "merged": "A request is merged",
+        "declined": "A request is declined"
+      }
+    },
+    "groups": {
+      "issue": "Issue",
+      "request": "Request"
+    }
   },
   "agents": {
     "empty": "No agents yet",

@@ -125,8 +125,8 @@
       "description": "Send project events to external URLs, signed with a per-webhook secret."
     },
     "forms": {
-      "label": "Forms",
-      "description": "Let anyone with a link file an issue here."
+      "label": "Requests",
+      "description": "How people outside the team send the project requests."
     },
     "git": {
       "label": "Repositories",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "New form",
+      "new": "New channel",
       "columns": {
-        "form": "Form",
+        "form": "Channel",
         "link": "Link"
       },
       "enabled": "Takes requests",
@@ -221,7 +221,8 @@
         "form": "Form",
         "questions": "Questions",
         "issue": "Issue",
-        "design": "Design"
+        "design": "Design",
+        "api": "API"
       },
       "questionsHint": "Name and email are always asked.",
       "preview": "Preview",
@@ -253,7 +254,7 @@
       "description": "The page where people send requests to the workspace's projects and follow them.",
       "general": "General",
       "forms": "Public forms",
-      "formsHint": "The workspace's projects can publish forms anyone with the link fills in. Off, their forms and portals stop opening and the projects lose their Forms settings; nothing is deleted.",
+      "formsHint": "The workspace's projects can publish forms anyone with the link fills in. Off, their forms and portals stop opening and the projects lose their Requests settings; nothing is deleted.",
       "name": "Name",
       "nameHint": "What people see on the portal and in its emails in place of the workspace's name. Empty shows the workspace's name.",
       "address": "Address",

@@ -20,10 +20,13 @@ import {
   notesPath,
   projectPath,
   viewPath,
+  workSectionPath,
 } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
+import { useWorkSections } from '@/hooks/useSettingsNavGroups';
 import { useFavoriteInitiativesQuery } from '@/services/initiatives.service';
 import { useViewsQuery } from '@/services/views.service';
 import { viewIcon } from '@/utils/viewIcons';
@@ -45,6 +48,8 @@ export default function SidebarWorkNav({
   const routeSub = useShellRoute().sub;
   const { can } = usePermissions();
   const features = useProjectFeatures();
+  const sectionText = useSettingsSectionText();
+  const workSections = useWorkSections().filter((s) => can(s.resource, s.viewAction ?? 'read'));
   const disabled = !projectKey;
   const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
   const { data: views } = useViewsQuery(projectKey);
@@ -126,6 +131,17 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
+          {workSections.map((s) => (
+            <SidebarNavItem
+              key={s.slug}
+              href={projectKey ? workSectionPath(projectKey, s.slug) : '#'}
+              icon={s.icon}
+              label={sectionText(s.slug).label}
+              active={routeSub === s.slug}
+              disabled={disabled}
+              badge={s.badge}
+            />
+          ))}
           {features.dashboards && can('dashboards', 'read') && (
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}

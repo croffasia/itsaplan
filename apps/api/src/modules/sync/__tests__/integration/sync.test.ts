@@ -3,6 +3,7 @@ import { api, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
+import { setScopeKinds } from '../../service';
 
 // GET /sync/rev is the one poll behind live refresh: it answers with the change
 // marker of every scope a client watches. The markers are written by database
@@ -91,6 +92,35 @@ describe('sync', () => {
       const { asOwner } = await setup();
       const res = await asOwner.sync.rev.get({ query: { scopes: '__proto__:1' } });
       expect(res.status).toBe(400);
+    });
+
+    it('reads a kind an extension adds, under the resource it names, until it is taken away', async () => {
+      const { asOwner, projectId, columnId } = await setup();
+      await createIssue(asOwner, columnId);
+      const { userId, api: asMember } = await addMember(asOwner);
+      setScopeKinds({ items: { key: (id) => `board:${id}`, resource: 'work_items' } });
+      try {
+        const board = await rev(asMember, `board:${projectId}`);
+        expect(board).not.toBe('0');
+        expect(await rev(asMember, `items:${projectId}`)).toBe(board);
+
+        const role = (await createRole(asOwner, 'MKT', { name: 'Guest', permissions: {} })).data!;
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .members({ userId })
+          .patch({ role: 'member', roleId: role.id });
+        expect(await rev(asMember, `items:${projectId}`)).toBe('0');
+      } finally {
+        setScopeKinds();
+      }
+      const res = await asOwner.sync.rev.get({ query: { scopes: `items:${projectId}` } });
+      expect(res.status).toBe(400);
+    });
+
+    it("refuses an extension's kind the core has", () => {
+      const kind = { key: (id: number) => `board:${id}`, resource: null };
+      expect(() => setScopeKinds({ board: kind })).toThrow("Scope kind 'board' is taken");
+      expect(() => setScopeKinds({ runnerQueue: kind })).toThrow();
     });
 
     it('rejects more scopes than the limit', async () => {

@@ -18,7 +18,7 @@ export interface ScopeKind {
   resource: PermissionResource | null;
 }
 
-export const scopeKind: Record<string, ScopeKind> = {
+const scopeKind: Record<string, ScopeKind> = {
   board: { key: (projectId) => `board:${projectId}`, resource: 'work_items' },
   documents: { key: (projectId) => `documents:${projectId}`, resource: 'documents' },
   issue: { key: (issueId) => `issue:${issueId}`, resource: 'work_items' },
@@ -29,6 +29,25 @@ export const scopeKind: Record<string, ScopeKind> = {
   agentRuns: { key: (projectId) => `runner-queue:${projectId}`, resource: 'ai_agents' },
   inbox: { key: (projectId, userId) => `inbox:${projectId}:${userId}`, resource: null },
 };
+
+let extensionKinds: Record<string, ScopeKind> = {};
+
+// The scope kinds an extension adds, whose rows its own triggers move with `bump_rev`
+// (migration 0070) under a project. Each call replaces the previous ones, and a kind the
+// core has throws.
+export function setScopeKinds(next: Record<string, ScopeKind> = {}): void {
+  const taken = Object.keys(next).find(
+    (kind) => Object.hasOwn(scopeKind, kind) || kind === 'runnerQueue',
+  );
+  if (taken) throw new Error(`Scope kind '${taken}' is taken`);
+  extensionKinds = next;
+}
+
+// Own properties only: an inherited name like '__proto__' is not a kind.
+export function scopeKindOf(kind: string): ScopeKind | undefined {
+  if (Object.hasOwn(scopeKind, kind)) return scopeKind[kind];
+  return Object.hasOwn(extensionKinds, kind) ? extensionKinds[kind] : undefined;
+}
 
 // A scope with no row has never changed; a client treats it the same as any other
 // unchanged value, so it reads as "0".

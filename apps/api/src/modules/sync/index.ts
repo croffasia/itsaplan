@@ -6,7 +6,7 @@ import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
-import { inboxAllRevision, NO_REV, readRevs, scopeKind, type ScopeRead } from './service';
+import { inboxAllRevision, NO_REV, readRevs, scopeKindOf, type ScopeRead } from './service';
 import { RevResponse, revQuery } from './model';
 
 const MAX_SCOPES = 20;
@@ -36,8 +36,7 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
       for (const scope of requested) {
         if (scope === 'runnerQueue:1' || scope === 'inbox:all') continue;
         const [kind, rawId] = scope.split(':');
-        // Own properties only: an inherited name like '__proto__' is not a kind.
-        const spec = kind && Object.hasOwn(scopeKind, kind) ? scopeKind[kind] : undefined;
+        const spec = kind ? scopeKindOf(kind) : undefined;
         const id = Number(rawId);
         if (!spec || !Number.isInteger(id) || id <= 0) {
           throw new HttpError(400, `Unknown scope '${scope}'`);

@@ -125,8 +125,8 @@
       "description": "Envoyez les événements du projet vers des URL externes, signés avec un secret propre à chaque webhook."
     },
     "forms": {
-      "label": "Formulaires",
-      "description": "Toute personne disposant du lien crée ici un ticket."
+      "label": "Demandes",
+      "description": "Comment les personnes extérieures à l'équipe envoient des demandes au projet."
     },
     "git": {
       "label": "Dépôts",
@@ -211,9 +211,9 @@
       }
     },
     "forms": {
-      "new": "Nouveau formulaire",
+      "new": "Nouveau canal",
       "columns": {
-        "form": "Formulaire",
+        "form": "Canal",
         "link": "Lien"
       },
       "enabled": "Accepte les demandes",
@@ -221,7 +221,8 @@
         "form": "Formulaire",
         "questions": "Questions",
         "issue": "Ticket",
-        "design": "Apparence"
+        "design": "Apparence",
+        "api": "API"
       },
       "questionsHint": "Le nom et l'e-mail sont toujours demandés.",
       "preview": "Aperçu",
@@ -253,7 +254,7 @@
       "description": "La page où chacun envoie des demandes aux projets de l'espace de travail et les suit.",
       "general": "Général",
       "forms": "Formulaires publics",
-      "formsHint": "Les projets de l'espace de travail peuvent publier des formulaires que toute personne avec le lien remplit. Désactivé, leurs formulaires et portails ne s'ouvrent plus et les projets perdent leur section Formulaires ; rien n'est supprimé.",
+      "formsHint": "Les projets de l'espace de travail peuvent publier des formulaires que toute personne avec le lien remplit. Désactivé, leurs formulaires et portails ne s'ouvrent plus et les projets perdent leur section Demandes ; rien n'est supprimé.",
       "name": "Nom",
       "nameHint": "Ce que les gens voient sur le portail et dans ses e-mails à la place du nom de l'espace de travail. Vide, c'est le nom de l'espace de travail.",
       "address": "Adresse",

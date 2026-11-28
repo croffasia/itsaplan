@@ -190,8 +190,14 @@ export function useActivityText() {
           ),
         };
       }
-      default:
+      default: {
+        // An action an extension records, worded in its own texts.
+        const key = `extensions.${a.action}` as Parameters<typeof t.has>[0];
+        if (t.has(key)) {
+          return { line: rich(key, { subject: subject ?? '', from: from ?? '', to: to ?? '' }) };
+        }
         return { line: a.action };
+      }
     }
   };
 }

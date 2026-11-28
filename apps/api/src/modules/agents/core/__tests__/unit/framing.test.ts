@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'bun:test';
-import { framePrompt, projectPreamble, type RunForPrompt } from '../../prompt/framing';
+import {
+  framePrompt,
+  projectPreamble,
+  runModePreamble,
+  type RunForPrompt,
+} from '../../prompt/framing';
 import { PROJECT_DESCRIPTION_LIMIT } from '#modules/projects/model';
 
 describe('projectPreamble', () => {
@@ -96,5 +101,13 @@ describe('framePrompt', () => {
     const text = framePrompt({ ...run, trigger: 'status', prompt });
     expect(text.startsWith(prompt)).toBe(true);
     expect(text).toContain('carry out the task above');
+  });
+
+  it('frames an event run on no issue as a task, with nothing to comment on', () => {
+    const prompt = 'Request 4 came in.\n\nSort it.';
+    const onNone = { ...run, trigger: 'event' as const, prompt, issueId: null };
+    expect(framePrompt(onNone)).toBe(`Carry out the following task:\n\n${prompt}`);
+    expect(runModePreamble(onNone)).toContain('in response to activity on the project');
+    expect(runModePreamble({ ...onNone, issueId: 7 })).toContain('activity on an issue');
   });
 });

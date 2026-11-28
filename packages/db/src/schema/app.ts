@@ -798,7 +798,7 @@ export const agentRun = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
-    // 'event' is a run an extension queued on an issue for a schedule of its own type.
+    // 'event' is a run an extension queued for a schedule of its own type, on an issue or on none.
     // 'api' is a task sent through POST /run or run_ai_agent: no issue, document or schedule.
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),

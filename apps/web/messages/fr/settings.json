@@ -17,8 +17,7 @@
       "cron": "Selon une planification",
       "status": "Quand un ticket entre dans un état"
     },
-    "moreTypes": "Plus de déclencheurs dans Cloud et Pro",
-    "moreTypesHint": "Nouveaux tickets, assignations, étiquettes et commentaires",
+    "moreTypes": "Disponible dans Cloud et Pro",
     "taskOptional": "Tâche (facultatif)",
     "issueTaskPlaceholder": "Rédige les critères d'acceptation dans la description du ticket.",
     "issueTaskHint": "L'agent reçoit le ticket et ce qui lui est arrivé. Ajoute ce qu'il doit en faire.",
@@ -87,7 +86,27 @@
     "createAgent": "Créer un agent",
     "empty": "Aucune planification pour l'instant",
     "emptyHint": "Choisissez un agent, une tâche et la fréquence d'exécution.",
-    "deleteMessage": "La planification <v>{name}</v> et son historique d'exécutions seront supprimés. Cette action est irréversible."
+    "deleteMessage": "La planification <v>{name}</v> et son historique d'exécutions seront supprimés. Cette action est irréversible.",
+    "events": {
+      "issue": {
+        "created": "Un ticket est créé",
+        "assigned": "Un ticket est assigné",
+        "label_added": "Une étiquette est ajoutée"
+      },
+      "comment": {
+        "created": "Un commentaire est ajouté"
+      },
+      "request": {
+        "received": "Une demande arrive",
+        "accepted": "Une demande est acceptée",
+        "merged": "Une demande est fusionnée",
+        "declined": "Une demande est refusée"
+      }
+    },
+    "groups": {
+      "issue": "Ticket",
+      "request": "Demande"
+    }
   },
   "agents": {
     "empty": "Aucun agent pour l'instant",

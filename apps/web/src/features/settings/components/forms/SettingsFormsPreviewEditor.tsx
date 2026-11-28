@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SettingsFormsPreviewForm from './SettingsFormsPreviewForm';
 
-const TABS = ['form', 'questions', 'issue', 'design'] as const;
+const TABS = ['form', 'questions', 'issue', 'design', 'api'] as const;
 
 const QUESTIONS = [
   { Icon: Type, width: '45%' },
@@ -22,7 +22,7 @@ const QUESTIONS = [
   { Icon: CalendarDays, width: '50%' },
 ];
 
-// The editor of a new form, open on its questions, beside the form as it is filled in.
+// The window of a new channel, open on its questions, beside its form as it is filled in.
 export default function SettingsFormsPreviewEditor() {
   const t = useTranslations('sections.previews.forms');
   const tCommon = useTranslations('common');

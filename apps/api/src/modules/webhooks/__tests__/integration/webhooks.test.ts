@@ -7,6 +7,7 @@ import { addProjectMember } from '#tests/helpers/members';
 import { createRole } from '#tests/helpers/roles';
 import type { WebhookEventType } from '../../service';
 import { onProjectEvent, type ProjectEvent } from '../../emit';
+import { createComment } from '#modules/issues/activity';
 
 async function setupOwnerProject() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -658,6 +659,30 @@ describe('webhooks', () => {
           .delete({ mode: 'delete' });
 
         expect(deleted).toEqual([expect.objectContaining({ id: issue.id })]);
+      } finally {
+        off();
+      }
+    });
+
+    it('hands a quiet comment to no listener and no webhook', async () => {
+      const { owner, asOwner, columnId } = await setupOwnerProject();
+      const webhookId = await createWebhook(asOwner, ['comment.created']);
+      const issue = (
+        await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
+      ).data!;
+      const types: string[] = [];
+      const off = onProjectEvent(async (event) => {
+        types.push(event.type);
+      });
+      try {
+        const base = { issueId: issue.id, actorUserId: owner.userId };
+        await createComment({ ...base, body: 'Said before', quiet: true });
+        expect(types).toEqual([]);
+        expect(await payloads(asOwner, webhookId)).toEqual([]);
+
+        await createComment({ ...base, body: 'Said now' });
+        expect(types).toEqual(['comment.created']);
+        expect(await payloads(asOwner, webhookId)).toHaveLength(1);
       } finally {
         off();
       }

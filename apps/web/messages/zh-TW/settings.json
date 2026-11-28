@@ -17,8 +17,7 @@
       "cron": "依排程",
       "status": "工作項目進入某狀態時"
     },
-    "moreTypes": "Cloud 和 Pro 中的更多觸發方式",
-    "moreTypesHint": "新工作項目、指派、標籤和留言",
+    "moreTypes": "在 Cloud 和 Pro 中可用",
     "taskOptional": "任務（可選）",
     "issueTaskPlaceholder": "在工作項目描述中寫下驗收標準。",
     "issueTaskHint": "代理會收到該工作項目及其發生的變化。可補充要對它做什麼。",
@@ -87,7 +86,27 @@
     "createAgent": "新建代理",
     "empty": "暫無排程",
     "emptyHint": "選擇代理、任務和執行頻率。",
-    "deleteMessage": "排程 <v>{name}</v> 及其執行記錄將被刪除。此操作無法復原。"
+    "deleteMessage": "排程 <v>{name}</v> 及其執行記錄將被刪除。此操作無法復原。",
+    "events": {
+      "issue": {
+        "created": "建立工作項目",
+        "assigned": "指派工作項目",
+        "label_added": "新增標籤"
+      },
+      "comment": {
+        "created": "新增留言"
+      },
+      "request": {
+        "received": "收到請求",
+        "accepted": "請求被接受",
+        "merged": "請求被合併",
+        "declined": "請求被拒絕"
+      }
+    },
+    "groups": {
+      "issue": "工作項目",
+      "request": "請求"
+    }
   },
   "agents": {
     "empty": "還沒有代理",

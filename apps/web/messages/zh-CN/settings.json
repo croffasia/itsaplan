@@ -17,8 +17,7 @@
       "cron": "按定时",
       "status": "工作项进入某状态时"
     },
-    "moreTypes": "Cloud 和 Pro 中的更多触发方式",
-    "moreTypesHint": "新工作项、指派、标签和评论",
+    "moreTypes": "在 Cloud 和 Pro 中可用",
     "taskOptional": "任务（可选）",
     "issueTaskPlaceholder": "在工作项描述中写下验收标准。",
     "issueTaskHint": "代理会收到该工作项及其发生的变化。可补充要对它做什么。",
@@ -87,7 +86,27 @@
     "createAgent": "新建代理",
     "empty": "暂无定时任务",
     "emptyHint": "选择代理、任务和运行频率。",
-    "deleteMessage": "定时任务 <v>{name}</v> 及其运行记录将被删除。此操作无法撤销。"
+    "deleteMessage": "定时任务 <v>{name}</v> 及其运行记录将被删除。此操作无法撤销。",
+    "events": {
+      "issue": {
+        "created": "创建工作项",
+        "assigned": "指派工作项",
+        "label_added": "添加标签"
+      },
+      "comment": {
+        "created": "添加评论"
+      },
+      "request": {
+        "received": "收到请求",
+        "accepted": "请求被接受",
+        "merged": "请求被合并",
+        "declined": "请求被拒绝"
+      }
+    },
+    "groups": {
+      "issue": "工作项",
+      "request": "请求"
+    }
   },
   "agents": {
     "empty": "还没有代理",

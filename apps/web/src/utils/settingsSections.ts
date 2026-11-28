@@ -19,7 +19,9 @@ import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/r
 
 // The project settings sections, each mounted as its own page at
 // /:team/:projectKey/settings/:section, except the 'ai-team' group, which is
-// mounted at /:team/:projectKey/agents/:section. The slug is the route param; the tab
+// mounted at /:team/:projectKey/agents/:section, and the 'work' group, mounted at
+// /:team/:projectKey/:section and listed in the main sidebar's top group after the inbox,
+// with its `badge` (a count, hidden at 0). The slug is the route param; the tab
 // components live in features/settings/components and take { project }. `resource`
 // is the permission resource that gates the section: `viewAction` (read unless set)
 // to view it, and the create/edit/delete actions gate the controls inside. `group` is
@@ -37,6 +39,7 @@ export type SettingsSection = {
   viewAction?: PermissionAction;
   group: string;
   menu?: string;
+  badge?: number;
   Component?: ComponentType;
 };
 
@@ -150,6 +153,9 @@ export function aiTeamEntries(sections: SettingsSection[]): AiTeamEntry[] {
   }
   return entries;
 }
+
+// The groups mounted at a route of their own, which the settings sidebar leaves out.
+export const ROUTED_GROUPS = ['ai-team', 'work'];
 
 // The core's AI Team sections; useAiTeamSections adds the hosted build's.
 export const AI_TEAM_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'ai-team');
